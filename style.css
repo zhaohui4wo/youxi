@@ -13,9 +13,99 @@ body {
 
 #app { position: relative; height: 100vh; }
 
+/* ---------- 开始 / 结束界面的背景装饰 ---------- */
+#bg-deco {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  filter: blur(0.4px);
+  animation: cloudDrift 60s linear infinite;
+}
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.cloud-1 {
+  width: 150px;
+  height: 46px;
+  top: 12%;
+  left: -190px;
+  animation-duration: 58s;
+}
+.cloud-1::before { width: 74px; height: 74px; left: 18px; top: -36px; }
+.cloud-1::after { width: 54px; height: 54px; right: 20px; top: -25px; }
+.cloud-2 {
+  width: 110px;
+  height: 34px;
+  top: 30%;
+  left: -150px;
+  opacity: 0.68;
+  animation-duration: 78s;
+  animation-delay: -26s;
+}
+.cloud-2::before { width: 56px; height: 56px; left: 14px; top: -27px; }
+.cloud-2::after { width: 42px; height: 42px; right: 15px; top: -19px; }
+.cloud-3 {
+  width: 90px;
+  height: 28px;
+  top: 72%;
+  left: -130px;
+  opacity: 0.55;
+  animation-duration: 92s;
+  animation-delay: -55s;
+}
+.cloud-3::before { width: 46px; height: 46px; left: 12px; top: -22px; }
+.cloud-3::after { width: 34px; height: 34px; right: 13px; top: -15px; }
+
+@keyframes cloudDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100vw + 300px)); }
+}
+
+.balloon {
+  position: absolute;
+  font-size: 46px;
+  filter: drop-shadow(0 6px 8px rgba(30, 90, 160, 0.15));
+  animation: balloonFloat 6s ease-in-out infinite;
+}
+.balloon-1 { top: 16%; right: 7%; }
+.balloon-2 { bottom: 14%; left: 6%; font-size: 34px; animation-delay: -3s; }
+
+@keyframes balloonFloat {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-16px) rotate(3deg); }
+}
+
+.sparkle {
+  position: absolute;
+  font-size: 26px;
+  opacity: 0.7;
+  animation: sparkleTwinkle 3.2s ease-in-out infinite;
+}
+.sparkle-1 { top: 24%; left: 12%; }
+.sparkle-2 { top: 66%; right: 12%; font-size: 20px; animation-delay: -1.1s; }
+.sparkle-3 { bottom: 20%; right: 28%; font-size: 18px; animation-delay: -2.2s; }
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.3; }
+  50% { transform: scale(1.15) rotate(12deg); opacity: 0.95; }
+}
+
 .screen {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
