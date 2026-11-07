@@ -57,6 +57,38 @@ const FONT = (s) => `bold ${s}px "PingFang SC", "Microsoft YaHei", system-ui, sa
 
 const TAU = Math.PI * 2;
 
+/* ---------------- 盲打指法 ----------------
+ * 每个字母由哪只手的哪根手指负责（标准 QWERTY 指法）
+ */
+const KEY_FINGER = {
+  q: 'l-pinky', a: 'l-pinky', z: 'l-pinky',
+  w: 'l-ring', s: 'l-ring', x: 'l-ring',
+  e: 'l-middle', d: 'l-middle', c: 'l-middle',
+  r: 'l-index', f: 'l-index', v: 'l-index',
+  t: 'l-index', g: 'l-index', b: 'l-index',
+  y: 'r-index', h: 'r-index', n: 'r-index',
+  u: 'r-index', j: 'r-index', m: 'r-index',
+  i: 'r-middle', k: 'r-middle',
+  o: 'r-ring', l: 'r-ring',
+  p: 'r-pinky',
+};
+
+const FINGER_INFO = {
+  'l-pinky':  { hand: 'left',  name: '左手小指',   color: '#f78fb3' },
+  'l-ring':   { hand: 'left',  name: '左手无名指', color: '#a29bfe' },
+  'l-middle': { hand: 'left',  name: '左手中指',   color: '#74b9ff' },
+  'l-index':  { hand: 'left',  name: '左手食指',   color: '#00b894' },
+  'r-index':  { hand: 'right', name: '右手食指',   color: '#fdcb6e' },
+  'r-middle': { hand: 'right', name: '右手中指',   color: '#e17055' },
+  'r-ring':   { hand: 'right', name: '右手无名指', color: '#ff7675' },
+  'r-pinky':  { hand: 'right', name: '右手小指',   color: '#6c5ce7' },
+};
+
+function rgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 /* 命中特效配色 */
 const CONFETTI_COLORS = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#b983ff', '#ff9f43', '#ff8fab', '#00c2a8'];
 const HIT_EMOJIS = ['✨', '⭐', '💫', '🌟', '🎈', '🍬', '🌈', '🍀'];
@@ -233,6 +265,19 @@ const canvas = $('canvas');
 const ctx = canvas.getContext('2d');
 const stage = $('stage');
 
+const keyboardPanel = $('keyboard-panel');
+const guideDot = $('guide-dot');
+const guideLabel = $('guide-label');
+const guideKey = $('guide-key');
+const handEls = {
+  left: document.querySelector('.hand-left'),
+  right: document.querySelector('.hand-right'),
+};
+const keyEls = new Map();
+const fingerEls = new Map();
+const keyFlashTimers = new Map();
+let lastGuideSig = null;
+
 let W = 0;
 let H = 0;
 let bgGrad = null;
@@ -258,6 +303,100 @@ function rr(x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
+}
+
+/* ---------------- 虚拟键盘与手指指导 ---------------- */
+function buildKeyboard() {
+  document.querySelectorAll('.kb-key').forEach((btn) => {
+    const k = (btn.dataset.key || '').toLowerCase();
+    if (!k) return;
+    keyEls.set(k, btn);
+    btn.tabIndex = -1;
+    btn.title = `按 ${k.toUpperCase()}`;
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (state.screen !== 'game' || !state.running || state.paused) return;
+      SFX.ensure();
+      flashKey(k);
+      handleKey(k);
+      if (btn.blur) btn.blur();
+    });
+  });
+
+  document.querySelectorAll('.finger').forEach((el) => {
+    const finger = el.dataset.finger;
+    if (finger) fingerEls.set(finger, el);
+  });
+}
+
+function flashKey(k) {
+  const el = keyEls.get(k);
+  if (!el) return;
+  el.classList.add('pressed');
+  const old = keyFlashTimers.get(k);
+  if (old) clearTimeout(old);
+  keyFlashTimers.set(k, setTimeout(() => {
+    el.classList.remove('pressed');
+    keyFlashTimers.delete(k);
+  }, 130));
+}
+
+function updateKeyboardGuidance() {
+  if (!keyEls.size) return;
+
+  let primary = null;
+  const nextKeys = new Set();
+  for (const it of state.items) {
+    if (it.typed >= it.seq.length) continue;
+    const ch = it.seq[it.typed].toLowerCase();
+    if (!KEY_FINGER[ch]) continue;
+    nextKeys.add(ch);
+    if (!primary || it.y > primary.y) primary = it;
+  }
+
+  // 已经锁定的目标优先，让提示跟着正在输入的词走
+  if (state.lockedId != null) {
+    const locked = state.items.find((it) => it.id === state.lockedId && it.typed < it.seq.length);
+    if (locked) primary = locked;
+  }
+
+  const primaryKey = primary ? primary.seq[primary.typed].toLowerCase() : '';
+  const primaryFinger = (primaryKey && KEY_FINGER[primaryKey]) || '';
+  const sig = `${[...nextKeys].sort().join('')}|${primaryKey}|${primaryFinger}|${primary ? primary.id : ''}|${state.items.length}`;
+  if (sig === lastGuideSig) return;
+  lastGuideSig = sig;
+
+  for (const [k, el] of keyEls) {
+    el.classList.toggle('next', nextKeys.has(k));
+    el.classList.toggle('primary', k === primaryKey);
+  }
+
+  for (const [finger, el] of fingerEls) {
+    el.classList.toggle('active', finger === primaryFinger);
+  }
+  if (handEls.left) handEls.left.classList.toggle('active', primaryFinger.startsWith('l-'));
+  if (handEls.right) handEls.right.classList.toggle('active', primaryFinger.startsWith('r-'));
+
+  const info = FINGER_INFO[primaryFinger];
+  if (info && primaryKey) {
+    const color = info.color;
+    guideLabel.textContent = info.name;
+    guideLabel.style.color = '';
+    guideKey.textContent = primaryKey.toUpperCase();
+    guideKey.style.setProperty('--guide-color', color);
+    guideDot.style.background = color;
+    guideDot.style.boxShadow = `0 0 0 5px ${rgba(color, 0.18)}`;
+    keyboardPanel.classList.add('guiding');
+  } else {
+    guideLabel.textContent = state.items.length ? '准备下一张卡片…' : '等待卡片…';
+    guideLabel.style.color = '';
+    guideKey.textContent = '';
+    guideKey.style.removeProperty('--guide-color');
+    guideDot.style.background = '';
+    guideDot.style.boxShadow = '';
+    keyboardPanel.classList.remove('guiding');
+  }
 }
 
 /* ---------------- 难度曲线 ---------------- */
@@ -605,8 +744,11 @@ function startGame(mode) {
   renderHearts();
   $('btn-pause').textContent = '⏸️';
   $('pause-overlay').classList.add('hidden');
+  keyboardPanel.classList.remove('paused');
+  lastGuideSig = null;
   showScreen('game');
   resize();
+  updateKeyboardGuidance();
   addFloat(W / 2, H * 0.3, '开始吧！' + MODES[mode].emoji, '#ff8a3d', 30);
 }
 
@@ -631,12 +773,15 @@ function togglePause() {
   state.paused = !state.paused;
   $('pause-overlay').classList.toggle('hidden', !state.paused);
   $('btn-pause').textContent = state.paused ? '▶️' : '⏸️';
+  keyboardPanel.classList.toggle('paused', state.paused);
+  if (!state.paused) updateKeyboardGuidance();
 }
 
 function quitToMenu() {
   state.running = false;
   state.paused = false;
   $('pause-overlay').classList.add('hidden');
+  keyboardPanel.classList.remove('paused');
   showScreen('start');
 }
 
@@ -644,7 +789,11 @@ function quitToMenu() {
 function handleKey(k) {
   // 已锁定的目标优先
   let target = state.items.find((it) => it.id === state.lockedId && it.typed < it.seq.length) || null;
-  if (target && target.seq[target.typed] === k) { hit(target); return; }
+  if (target && target.seq[target.typed] === k) {
+    hit(target);
+    updateKeyboardGuidance();
+    return;
+  }
 
   // 换新目标：优先位置最低（最危险）的那个
   let best = null;
@@ -657,6 +806,7 @@ function handleKey(k) {
   } else {
     miss(target);
   }
+  updateKeyboardGuidance();
 }
 
 function hit(it) {
@@ -859,6 +1009,8 @@ function update(dt) {
   state.shake *= Math.exp(-dt * 7);
   if (state.shake < 0.05) state.shake = 0;
   state.flash = Math.max(0, state.flash - dt * 1.6);
+
+  updateKeyboardGuidance();
 }
 
 function drawItem(it) {
@@ -1564,6 +1716,7 @@ window.addEventListener('keydown', (e) => {
   if (!/^[a-z]$/.test(k)) return;
   e.preventDefault();
   SFX.ensure();
+  flashKey(k);
   handleKey(k);
 });
 
@@ -1604,6 +1757,7 @@ $('btn-mute').addEventListener('click', (e) => {
 
 /* ---------------- 启动 ---------------- */
 window.addEventListener('resize', resize);
+buildKeyboard();
 $('btn-mute').textContent = SFX.muted ? '🔇' : '🔊';
 document.querySelectorAll('.speed-btn').forEach((b) => b.classList.toggle('active', b.dataset.speed === speedSetting));
 updateModeBests();

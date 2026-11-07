@@ -87,6 +87,75 @@
         </div>
       </div>
     </div>
+
+    <!-- 底部虚拟键盘 + 手指指导 -->
+    <div id="keyboard-panel" role="group" aria-label="虚拟键盘和手指指导">
+      <div class="hand hand-left" aria-hidden="true">
+        <svg class="hand-svg" viewBox="0 0 120 130">
+          <path class="palm" d="M30 58 Q30 46 44 46 H84 Q98 46 98 60 V94 Q98 114 78 114 H48 Q30 114 30 94 Z"/>
+          <rect class="finger thumb" data-finger="l-thumb" x="4" y="70" width="36" height="17" rx="8.5" transform="rotate(-30 22 78)"/>
+          <rect class="finger index" data-finger="l-index" x="24" y="26" width="16" height="50" rx="8"/>
+          <rect class="finger middle" data-finger="l-middle" x="44" y="18" width="16" height="58" rx="8"/>
+          <rect class="finger ring" data-finger="l-ring" x="64" y="24" width="16" height="52" rx="8"/>
+          <rect class="finger pinky" data-finger="l-pinky" x="84" y="36" width="14" height="40" rx="7"/>
+        </svg>
+        <span class="hand-label">左手</span>
+      </div>
+
+      <div id="kb-center">
+        <div id="guide-text" role="status" aria-live="polite">
+          <span id="guide-dot" aria-hidden="true"></span>
+          <span id="guide-label">等待卡片…</span>
+          <kbd id="guide-key"></kbd>
+        </div>
+        <div id="keyboard">
+          <div class="kb-row" data-row="1">
+            <button type="button" class="kb-key" data-key="q" data-finger="l-pinky">Q</button>
+            <button type="button" class="kb-key" data-key="w" data-finger="l-ring">W</button>
+            <button type="button" class="kb-key" data-key="e" data-finger="l-middle">E</button>
+            <button type="button" class="kb-key" data-key="r" data-finger="l-index">R</button>
+            <button type="button" class="kb-key" data-key="t" data-finger="l-index">T</button>
+            <button type="button" class="kb-key" data-key="y" data-finger="r-index">Y</button>
+            <button type="button" class="kb-key" data-key="u" data-finger="r-index">U</button>
+            <button type="button" class="kb-key" data-key="i" data-finger="r-middle">I</button>
+            <button type="button" class="kb-key" data-key="o" data-finger="r-ring">O</button>
+            <button type="button" class="kb-key" data-key="p" data-finger="r-pinky">P</button>
+          </div>
+          <div class="kb-row" data-row="2">
+            <button type="button" class="kb-key" data-key="a" data-finger="l-pinky">A</button>
+            <button type="button" class="kb-key" data-key="s" data-finger="l-ring">S</button>
+            <button type="button" class="kb-key" data-key="d" data-finger="l-middle">D</button>
+            <button type="button" class="kb-key" data-key="f" data-finger="l-index">F</button>
+            <button type="button" class="kb-key" data-key="g" data-finger="l-index">G</button>
+            <button type="button" class="kb-key" data-key="h" data-finger="r-index">H</button>
+            <button type="button" class="kb-key" data-key="j" data-finger="r-index">J</button>
+            <button type="button" class="kb-key" data-key="k" data-finger="r-middle">K</button>
+            <button type="button" class="kb-key" data-key="l" data-finger="r-ring">L</button>
+          </div>
+          <div class="kb-row" data-row="3">
+            <button type="button" class="kb-key" data-key="z" data-finger="l-pinky">Z</button>
+            <button type="button" class="kb-key" data-key="x" data-finger="l-ring">X</button>
+            <button type="button" class="kb-key" data-key="c" data-finger="l-middle">C</button>
+            <button type="button" class="kb-key" data-key="v" data-finger="l-index">V</button>
+            <button type="button" class="kb-key" data-key="b" data-finger="l-index">B</button>
+            <button type="button" class="kb-key" data-key="n" data-finger="r-index">N</button>
+            <button type="button" class="kb-key" data-key="m" data-finger="r-index">M</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hand hand-right" aria-hidden="true">
+        <svg class="hand-svg" viewBox="0 0 120 130">
+          <path class="palm" d="M30 58 Q30 46 44 46 H84 Q98 46 98 60 V94 Q98 114 78 114 H48 Q30 114 30 94 Z"/>
+          <rect class="finger thumb" data-finger="r-thumb" x="4" y="70" width="36" height="17" rx="8.5" transform="rotate(-30 22 78)"/>
+          <rect class="finger index" data-finger="r-index" x="24" y="26" width="16" height="50" rx="8"/>
+          <rect class="finger middle" data-finger="r-middle" x="44" y="18" width="16" height="58" rx="8"/>
+          <rect class="finger ring" data-finger="r-ring" x="64" y="24" width="16" height="52" rx="8"/>
+          <rect class="finger pinky" data-finger="r-pinky" x="84" y="36" width="14" height="40" rx="7"/>
+        </svg>
+        <span class="hand-label">右手</span>
+      </div>
+    </div>
   </section>
 
   <!-- 结束界面 -->
