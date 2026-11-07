@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="给小朋友的打字小游戏：字母、单词、拼音三种模式">
+<title>字母大冒险 🚀 打字小游戏</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- 开始界面 -->
+  <section id="screen-start" class="screen">
+    <div class="panel">
+      <h1 class="title">🚀 字母大冒险</h1>
+      <p class="subtitle">选一个模式，开始打字吧！</p>
+      <div class="speed-row">
+        <span class="speed-label">速度</span>
+        <div class="speed-opts">
+          <button class="speed-btn" data-speed="slow">🐢 慢慢来</button>
+          <button class="speed-btn" data-speed="normal">🐰 正合适</button>
+          <button class="speed-btn" data-speed="fast">🦊 有点快</button>
+        </div>
+      </div>
+      <div class="mode-list">
+        <button class="mode-btn letter" data-mode="letter">
+          <span class="mode-emoji">🔤</span>
+          <span>
+            <span class="mode-name">字母模式</span>
+            <span class="mode-desc">单个字母掉下来，按对应的键把它打掉</span>
+          </span>
+          <span class="mode-best" data-best="letter">🏆 最高分 0</span>
+        </button>
+        <button class="mode-btn word" data-mode="word">
+          <span class="mode-emoji">🐱</span>
+          <span>
+            <span class="mode-name">单词模式</span>
+            <span class="mode-desc">拼出完整的英文单词，练习拼读</span>
+          </span>
+          <span class="mode-best" data-best="word">🏆 最高分 0</span>
+        </button>
+        <button class="mode-btn pinyin" data-mode="pinyin">
+          <span class="mode-emoji">🀄</span>
+          <span>
+            <span class="mode-name">拼音模式</span>
+            <span class="mode-desc">看到汉字，敲出它的拼音（不用声调）</span>
+          </span>
+          <span class="mode-best" data-best="pinyin">🏆 最高分 0</span>
+        </button>
+      </div>
+      <p class="hint">⌨️ 在电脑键盘上打字 · 按 <b>空格键</b> 暂停</p>
+    </div>
+  </section>
+
+  <!-- 游戏界面 -->
+  <section id="screen-game" class="screen hidden">
+    <div id="hud">
+      <button id="btn-home" class="hud-btn" title="回到首页">🏠</button>
+      <div class="hud-chip" id="chip-score">🏅 <span id="score">0</span></div>
+      <div class="hud-chip" id="chip-level">⭐ 第 <span id="level">1</span> 关</div>
+      <div class="hud-chip combo hidden" id="chip-combo">🔥 连击 <span id="combo">0</span></div>
+      <div id="lives">❤️❤️❤️</div>
+      <div class="hud-spacer"></div>
+      <button id="btn-pause" class="hud-btn" title="暂停 (空格)">⏸️</button>
+      <button id="btn-mute" class="hud-btn" title="开/关声音">🔊</button>
+    </div>
+    <div id="stage">
+      <canvas id="canvas"></canvas>
+      <div id="pause-overlay" class="overlay hidden">
+        <div class="panel">
+          <p class="overlay-title">⏸️ 休息一下</p>
+          <button id="btn-resume" class="big-btn">▶️ 继续游戏</button>
+          <button id="btn-quit" class="big-btn ghost">🏠 回到首页</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 结束界面 -->
+  <section id="screen-over" class="screen hidden">
+    <div class="panel">
+      <p class="over-title" id="over-title">🎉 真棒！</p>
+      <p class="over-score"><span id="over-score">0</span> 分</p>
+      <p class="over-newbest hidden" id="over-newbest">🏆 新纪录！</p>
+      <p class="over-stats" id="over-stats">最高连击 0 · 闯到第 1 关</p>
+      <p class="over-best" id="over-best">最高分：0</p>
+      <div class="over-btns">
+        <button id="btn-retry" class="big-btn">🔄 再来一次</button>
+        <button id="btn-menu" class="big-btn ghost">🏠 选其他模式</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script src="game.js"></script>
+</body>
+</html>
