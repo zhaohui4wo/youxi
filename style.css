@@ -5,7 +5,11 @@ body {
   margin: 0;
   overflow: hidden;
   font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, sans-serif;
-  background: linear-gradient(180deg, #8fd9ff 0%, #c9f0ff 55%, #e9fbff 100%);
+  background:
+    radial-gradient(circle at 84% 12%, rgba(255, 235, 130, 0.7) 0 78px, rgba(255, 235, 130, 0) 80px),
+    radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.42) 0 150px, rgba(255, 255, 255, 0) 152px),
+    radial-gradient(circle at 50% 110%, rgba(255, 255, 255, 0.5) 0 220px, rgba(255, 255, 255, 0) 222px),
+    linear-gradient(180deg, #8fd9ff 0%, #c9f0ff 55%, #e9fbff 100%);
   color: #37364e;
   user-select: none;
   -webkit-user-select: none;
