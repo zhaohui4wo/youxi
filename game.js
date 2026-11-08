@@ -8,12 +8,63 @@
 /* ---------------- 词库 ---------------- */
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+/* 字母名称的读音写法，避免语音引擎把单个字母读成单词 */
+const LETTER_NAMES = {
+  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff',
+  g: 'gee', h: 'aitch', i: 'eye', j: 'jay', k: 'kay', l: 'ell',
+  m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'ar',
+  s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you',
+  x: 'ex', y: 'why', z: 'zee',
+};
+
+/* 小学 1～6 年级常见单词 + 中文意思（[英文, 中文]） */
 const WORDS = [
-  'cat', 'dog', 'sun', 'hat', 'bus', 'fish', 'star', 'tree', 'book', 'cake',
-  'milk', 'bird', 'frog', 'ball', 'kite', 'duck', 'ship', 'moon', 'rain', 'snow',
-  'happy', 'smile', 'green', 'house', 'panda', 'tiger', 'apple', 'rabbit', 'monkey', 'orange',
-  'flower', 'school', 'friend', 'summer', 'window', 'garden', 'purple', 'yellow', 'rocket', 'pencil',
-  'castle',
+  // 动物
+  ['cat', '猫'], ['dog', '狗'], ['fish', '鱼'], ['bird', '鸟'],
+  ['frog', '青蛙'], ['duck', '鸭子'], ['panda', '熊猫'], ['tiger', '老虎'],
+  ['rabbit', '兔子'], ['monkey', '猴子'], ['horse', '马'], ['sheep', '绵羊'],
+  ['bear', '熊'], ['lion', '狮子'], ['mouse', '老鼠'], ['elephant', '大象'],
+  ['pig', '猪'], ['cow', '奶牛'],
+  // 自然
+  ['sun', '太阳'], ['star', '星星'], ['tree', '树'], ['moon', '月亮'],
+  ['rain', '雨'], ['snow', '雪'], ['cloud', '云'], ['wind', '风'],
+  ['river', '河流'], ['mountain', '山'], ['flower', '花'],
+  // 食物
+  ['cake', '蛋糕'], ['milk', '牛奶'], ['apple', '苹果'], ['orange', '橙子'],
+  ['bread', '面包'], ['rice', '米饭'], ['egg', '鸡蛋'], ['water', '水'],
+  ['noodles', '面条'], ['banana', '香蕉'], ['grape', '葡萄'], ['juice', '果汁'],
+  // 学校
+  ['book', '书'], ['school', '学校'], ['pencil', '铅笔'], ['ruler', '尺子'],
+  ['eraser', '橡皮'], ['desk', '课桌'], ['chair', '椅子'], ['teacher', '老师'],
+  ['student', '学生'], ['bag', '书包'], ['pen', '钢笔'], ['music', '音乐'],
+  // 颜色
+  ['green', '绿色'], ['purple', '紫色'], ['yellow', '黄色'], ['red', '红色'],
+  ['blue', '蓝色'], ['black', '黑色'], ['white', '白色'], ['pink', '粉色'],
+  ['brown', '棕色'],
+  // 家庭
+  ['house', '房子'], ['friend', '朋友'], ['family', '家庭'], ['mother', '妈妈'],
+  ['father', '爸爸'], ['sister', '姐妹'], ['brother', '兄弟'], ['grandpa', '爷爷'],
+  ['grandma', '奶奶'], ['baby', '宝宝'],
+  // 季节与天气
+  ['summer', '夏天'], ['winter', '冬天'], ['spring', '春天'], ['autumn', '秋天'],
+  ['sunny', '晴朗的'], ['windy', '有风的'], ['cloudy', '多云的'], ['rainy', '下雨的'],
+  ['cold', '寒冷的'], ['warm', '温暖的'], ['hot', '炎热的'],
+  // 动作
+  ['happy', '开心的'], ['smile', '微笑'], ['run', '跑'], ['jump', '跳'],
+  ['swim', '游泳'], ['walk', '走路'], ['read', '阅读'], ['write', '写'],
+  ['sing', '唱歌'], ['dance', '跳舞'], ['draw', '画画'], ['play', '玩'],
+  ['eat', '吃'], ['drink', '喝'], ['sleep', '睡觉'], ['study', '学习'],
+  // 物品
+  ['hat', '帽子'], ['bus', '公交车'], ['ball', '球'], ['kite', '风筝'],
+  ['ship', '轮船'], ['rocket', '火箭'], ['castle', '城堡'], ['window', '窗户'],
+  ['garden', '花园'], ['bike', '自行车'], ['car', '小汽车'], ['train', '火车'],
+  ['plane', '飞机'], ['phone', '电话'], ['clock', '时钟'], ['door', '门'],
+  ['bed', '床'],
+  // 其他常用词
+  ['toy', '玩具'], ['gift', '礼物'], ['birthday', '生日'], ['holiday', '假期'],
+  ['weekend', '周末'], ['morning', '早上'], ['evening', '傍晚'], ['tomorrow', '明天'],
+  ['big', '大的'], ['small', '小的'], ['long', '长的'], ['short', '短的'],
+  ['tall', '高的'], ['young', '年轻的'], ['old', '年老的'], ['new', '新的'],
 ];
 
 /* 常用汉字 + 无声调拼音（一二年级常见字） */
@@ -226,6 +277,57 @@ const SFX = {
   },
 };
 
+/* ---------------- 正确读音（浏览器自带语音合成） ---------------- */
+let speakTimer = null;
+
+function cancelSpeech() {
+  if (speakTimer) {
+    clearTimeout(speakTimer);
+    speakTimer = null;
+  }
+  if ('speechSynthesis' in window) {
+    try { speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
+  }
+}
+
+function voiceFor(lang) {
+  if (!('speechSynthesis' in window)) return null;
+  let voices = [];
+  try { voices = speechSynthesis.getVoices(); } catch (e) { return null; }
+  const prefix = lang.slice(0, 2).toLowerCase();
+  const matched = voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(prefix));
+  if (!matched.length) return null;
+  const preferred = /natural|neural|google|samantha|ava|allison|susan|karen|daniel|moira|tessa|fiona|aria|jenny|zira|tingting|meijia|yaoyao|xiaoxiao|yunxi/i;
+  const novelty = /bad news|bahh|bells|boing|bubbles|cellos|wobble|jester|organ|superstar|trinoids|whisper|zarvox|albert|ralph|fred|kathy|grandma|grandpa|rocko|shelley|flo|junior|pipe organ|good news/i;
+  return matched.find((v) => preferred.test(v.name)) ||
+    matched.find((v) => !novelty.test(v.name)) ||
+    matched[0];
+}
+
+function speakText(text, lang, rate) {
+  if (SFX.muted || !text || !('speechSynthesis' in window)) return;
+  if (state.screen !== 'game' || !state.running || state.paused) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = rate;
+    u.pitch = 1.05;
+    const voice = voiceFor(lang);
+    if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  } catch (e) { /* 忽略不支持的环境 */ }
+}
+
+function speakAfterExplosion(text, lang, rate) {
+  if (speakTimer) clearTimeout(speakTimer);
+  // 等爆炸特效和音效放完再读，听感更清楚
+  speakTimer = setTimeout(() => {
+    speakTimer = null;
+    speakText(text, lang, rate);
+  }, 450);
+}
+
 /* ---------------- 状态 ---------------- */
 const state = {
   screen: 'start',      // start | game | over
@@ -253,6 +355,8 @@ const state = {
   bestCombo: 0,
   lives: 3,
   level: 1,
+  nextRocket: 3600,     // 第 12 关后，下一次火箭庆祝的分数
+  rocketCount: 0,
   spawnTimer: 0,        // 毫秒
   lockedId: null,       // 当前锁定的掉落物
   nextId: 1,
@@ -266,6 +370,7 @@ const ctx = canvas.getContext('2d');
 const stage = $('stage');
 
 const keyboardPanel = $('keyboard-panel');
+const fxLayer = $('level-fx');
 const guideDot = $('guide-dot');
 const guideLabel = $('guide-label');
 const guideKey = $('guide-key');
@@ -414,6 +519,7 @@ function buildCandidate() {
   const mode = state.mode;
   let seq = '';
   let hanzi = '';
+  let trans = '';
   let w, h;
 
   if (mode === 'letter') {
@@ -422,10 +528,15 @@ function buildCandidate() {
     w = Math.max(76, ctx.measureText(seq.toUpperCase()).width + 44);
     h = 76;
   } else if (mode === 'word') {
-    seq = choice(WORDS);
+    const pair = choice(WORDS);
+    seq = pair[0];
+    trans = pair[1];
     ctx.font = FONT(26);
-    w = Math.max(90, ctx.measureText(seq).width + 40);
-    h = 58;
+    const w1 = ctx.measureText(seq).width;
+    ctx.font = FONT(15);
+    const w2 = ctx.measureText(trans).width;
+    w = Math.max(100, w1 + 44, w2 + 44);
+    h = 76;
   } else {
     const pair = choice(PINYIN_CHARS);
     hanzi = pair[0];
@@ -443,6 +554,7 @@ function buildCandidate() {
     kind: mode,
     seq,
     hanzi,
+    trans,
     typed: 0,
     x: 0,
     y: -h - 12,
@@ -681,6 +793,771 @@ function fireworks(n) {
   shakeScreen(6);
 }
 
+/* ---------------- 升级全屏庆祝动画 ---------------- */
+const LEVEL_FX = [
+  { name: '彩虹冲击波', emoji: '🌈', ink: '#ff5e7e', tint: 'radial-gradient(circle at 50% 34%, rgba(255,255,255,0.8), rgba(255,190,120,0.32) 42%, rgba(255,150,220,0.22) 70%, transparent 85%)' },
+  { name: '太阳花绽放', emoji: '🌻', ink: '#f08c00', tint: 'radial-gradient(circle at 50% 34%, rgba(255,246,180,0.88), rgba(255,200,60,0.32) 48%, transparent 78%)' },
+  { name: '气球升空', emoji: '🎈', ink: '#e84393', tint: 'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,120,160,0.24))' },
+  { name: '星星雨', emoji: '🌟', ink: '#4d7cff', tint: 'linear-gradient(180deg, rgba(70,110,255,0.3), rgba(160,120,255,0.12) 60%, transparent)' },
+  { name: '动物狂欢节', emoji: '🎪', ink: '#e8590c', tint: 'linear-gradient(120deg, rgba(255,90,140,0.28), rgba(255,210,70,0.2) 25%, rgba(80,220,160,0.22) 50%, rgba(80,150,255,0.24) 75%, rgba(190,100,255,0.28))' },
+  { name: '爱心海洋', emoji: '💖', ink: '#ff4d8d', tint: 'radial-gradient(circle at 50% 34%, rgba(255,230,240,0.7), rgba(255,110,160,0.26) 55%, transparent 80%)' },
+  { name: '彩带瀑布', emoji: '🎀', ink: '#e84393', tint: 'linear-gradient(180deg, rgba(255,215,240,0.45), rgba(255,170,215,0.18) 55%, transparent)' },
+  { name: '彩虹音符', emoji: '🎹', ink: '#7b61ff', tint: 'linear-gradient(120deg, rgba(255,90,170,0.3), rgba(255,210,70,0.22) 30%, rgba(70,220,160,0.24) 55%, rgba(80,150,255,0.26) 78%, rgba(180,100,255,0.3))' },
+  { name: '泡泡海洋', emoji: '🫧', ink: '#0096c7', tint: 'linear-gradient(180deg, rgba(120,220,255,0.22), rgba(200,245,255,0.12) 60%, transparent)' },
+  { name: '彩虹喷泉', emoji: '⛲', ink: '#0ea5e9', tint: 'linear-gradient(180deg, rgba(120,220,255,0.22), rgba(180,140,255,0.22) 40%, rgba(255,150,210,0.2) 70%, rgba(80,200,180,0.24))' },
+  { name: '彩虹万花筒', emoji: '🔮', ink: '#8e44ad', tint: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.42), rgba(255,120,220,0.22) 35%, rgba(80,180,255,0.2) 60%, rgba(120,80,255,0.18) 80%, transparent)' },
+  { name: '冠军庆典', emoji: '🏆', ink: '#c98a00', tint: 'radial-gradient(circle at 50% 34%, rgba(255,240,160,0.8), rgba(255,190,40,0.3) 50%, rgba(255,150,0,0.1) 80%)' },
+];
+
+let fxCleanupTimer = null;
+let fxStartTimer = null;
+const FX_SLOW = 1.7; // 庆祝动画整体放慢倍率
+const fxRand = (a, b) => a + Math.random() * (b - a);
+// 从庆祝中心（屏幕上方 34%）到四角的最大距离，用来让特效铺满全屏
+const fxMaxRadius = () => Math.hypot(window.innerWidth / 2, window.innerHeight * 0.66);
+
+function fxClear() {
+  if (fxCleanupTimer) { clearTimeout(fxCleanupTimer); fxCleanupTimer = null; }
+  if (fxStartTimer) { clearTimeout(fxStartTimer); fxStartTimer = null; }
+  if (!fxLayer) return;
+  try {
+    if (fxLayer.getAnimations) {
+      for (const anim of fxLayer.getAnimations({ subtree: true })) {
+        try { anim.cancel(); } catch (e) { /* 忽略 */ }
+      }
+    }
+  } catch (e) { /* 忽略 */ }
+  fxLayer.replaceChildren();
+}
+
+function fxAdd(el) {
+  fxLayer.appendChild(el);
+  return el;
+}
+
+function fxRun(el, frames, duration, delay = 0, easing = 'ease-out') {
+  const anim = el.animate(frames, { duration: duration * FX_SLOW, delay: delay * FX_SLOW, easing, fill: 'both' });
+  anim.onfinish = () => el.remove();
+  return anim;
+}
+
+function fxEmoji(char, xVw, yVh, size, frames, duration, delay = 0, easing = 'ease-out') {
+  const el = document.createElement('span');
+  el.className = 'fx-particle';
+  el.textContent = char;
+  el.style.left = xVw + 'vw';
+  el.style.top = yVh + 'vh';
+  el.style.fontSize = size + 'px';
+  fxAdd(el);
+  fxRun(el, frames, duration, delay, easing);
+  return el;
+}
+
+/* 单朵烟花：一圈彩色粒子 + 中心光环 */
+function fxFireworkBurst(xVw, yVh, delay = 0) {
+  const colors = [choice(CONFETTI_COLORS), choice(CONFETTI_COLORS), '#ffd93d', '#ffffff'];
+  const min = Math.min(window.innerWidth, window.innerHeight) / 100;
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * TAU;
+    const dist = fxRand(8, 24) * min;
+    const dot = document.createElement('div');
+    dot.className = 'fx-dot';
+    dot.style.width = dot.style.height = fxRand(5, 9) + 'px';
+    dot.style.background = choice(colors);
+    dot.style.left = xVw + 'vw';
+    dot.style.top = yVh + 'vh';
+    fxAdd(dot);
+    fxRun(dot, [
+      { transform: 'translate(-50%, -50%) scale(0.6)', opacity: 0 },
+      { opacity: 1, offset: 0.1 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px) scale(0.2)`, opacity: 0 },
+    ], fxRand(650, 950), delay + fxRand(0, 90), 'cubic-bezier(.15,.7,.3,1)');
+  }
+  const ring = document.createElement('div');
+  ring.className = 'fx-ring';
+  ring.style.width = ring.style.height = '70px';
+  ring.style.borderWidth = '5px';
+  ring.style.borderColor = choice(colors);
+  ring.style.left = xVw + 'vw';
+  ring.style.top = yVh + 'vh';
+  fxAdd(ring);
+  fxRun(ring, [
+    { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0.9 },
+    { transform: 'translate(-50%, -50%) scale(1.8)', opacity: 0 },
+  ], 520, delay, 'ease-out');
+}
+
+/* 1. 彩虹冲击波 */
+function fxRainbow(vw, vh) {
+  ['#ff6b6b', '#ffd93d', '#41d39f', '#4dabf7', '#b983ff'].forEach((color, i) => {
+    const ring = document.createElement('div');
+    ring.className = 'fx-ring';
+    ring.style.borderColor = color;
+    ring.style.left = '50%';
+    ring.style.top = '34%';
+    fxAdd(ring);
+    fxRun(ring, [
+      { transform: 'translate(-50%, -50%) scale(0.15)', opacity: 0.95 },
+      { transform: 'translate(-50%, -50%) scale(6.5)', opacity: 0 },
+    ], 1500, i * 110, 'cubic-bezier(.15,.65,.25,1)');
+  });
+  for (let i = 0; i < 44; i++) {
+    const a = (i / 44) * TAU + fxRand(-0.08, 0.08);
+    const dist = fxRand(18, 48) * vw;
+    const shard = document.createElement('div');
+    shard.className = 'fx-shard';
+    shard.style.width = fxRand(6, 12) + 'px';
+    shard.style.height = fxRand(10, 18) + 'px';
+    shard.style.background = choice(CONFETTI_COLORS);
+    shard.style.left = '50%';
+    shard.style.top = '34%';
+    fxAdd(shard);
+    const mid = dist * 0.45;
+    fxRun(shard, [
+      { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 0 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * mid}px, ${Math.sin(a) * mid}px) rotate(${fxRand(120, 300)}deg)`, opacity: 1, offset: 0.25 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px) rotate(${fxRand(360, 900)}deg)`, opacity: 0 },
+    ], fxRand(1200, 1700), fxRand(0, 220), 'cubic-bezier(.2,.6,.4,1)');
+  }
+}
+
+/* 2. 太阳花绽放 */
+function fxSunflower(vw, vh) {
+  for (let i = 0; i < 28; i++) {
+    const ray = document.createElement('div');
+    ray.className = 'fx-ray';
+    ray.style.left = '50%';
+    ray.style.top = '34%';
+    ray.style.height = fxRand(24, 58) * vh + 'px';
+    ray.style.background = 'linear-gradient(180deg, rgba(255,217,61,0), #ffd93d)';
+    fxAdd(ray);
+    const base = i * (360 / 28);
+    fxRun(ray, [
+      { transform: `translate(-50%, 0) rotate(${base}deg) scaleY(0)`, opacity: 0 },
+      { transform: `translate(-50%, 0) rotate(${base}deg) scaleY(1)`, opacity: 0.85, offset: 0.38 },
+      { transform: `translate(-50%, 0) rotate(${base + 16}deg) scaleY(1.1)`, opacity: 0 },
+    ], fxRand(1300, 1700), fxRand(0, 180), 'cubic-bezier(.2,.7,.3,1)');
+  }
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * TAU;
+    fxEmoji('🌼', 50 + Math.cos(a) * fxRand(18, 42), 34 + Math.sin(a) * fxRand(16, 38), fxRand(24, 46), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(-90deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1.1) rotate(0deg)', opacity: 1, offset: 0.45 },
+      { transform: 'translate(-50%, -50%) scale(1.35) rotate(50deg)', opacity: 0 },
+    ], fxRand(1100, 1600), fxRand(0, 260), 'ease-out');
+  }
+  for (let i = 0; i < 10; i++) {
+    fxEmoji(choice(['🌻', '🌼', '🌸']), fxRand(4, 96), fxRand(5, 92), fxRand(30, 62), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(-60deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 0.95, offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(1.25) rotate(25deg)', opacity: 0 },
+    ], fxRand(1600, 2300), fxRand(0, 600), 'ease-out');
+  }
+  fxEmoji('🌻', 50, 34, 96, [
+    { transform: 'translate(-50%, -50%) scale(0) rotate(-120deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.25) rotate(10deg)', opacity: 1, offset: 0.38 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.75 },
+    { transform: 'translate(-50%, -50%) scale(1.5) rotate(25deg)', opacity: 0 },
+  ], 1700, 0, 'ease-out');
+}
+
+/* 3. 气球升空 */
+function fxBalloons(vw, vh) {
+  for (let i = 0; i < 26; i++) {
+    const el = document.createElement('span');
+    el.className = 'fx-particle';
+    el.textContent = '🎈';
+    el.style.left = fxRand(3, 97) + 'vw';
+    el.style.top = '112vh';
+    el.style.fontSize = fxRand(26, 56) + 'px';
+    el.style.filter = `hue-rotate(${fxRand(0, 360)}deg) saturate(1.15)`;
+    fxAdd(el);
+    const drift = fxRand(-80, 80);
+    const rise = fxRand(85, 135);
+    fxRun(el, [
+      { transform: 'translate(-50%, -50%) translate(0, 0) rotate(-8deg)', opacity: 0 },
+      { opacity: 1, offset: 0.1 },
+      { transform: `translate(-50%, -50%) translate(${drift * 0.45}px, -${rise * 0.55}vh) rotate(7deg)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(-50%, -50%) translate(${drift}px, -${rise}vh) rotate(-4deg)`, opacity: 0 },
+    ], fxRand(1500, 2300), fxRand(0, 420), 'cubic-bezier(.25,.5,.4,1)');
+  }
+}
+
+/* 4. 星星雨 */
+function fxStarRain(vw, vh) {
+  for (let i = 0; i < 48; i++) {
+    fxEmoji(choice(['⭐', '✨', '🌟', '💫']), fxRand(0, 100), -8, fxRand(16, 40), [
+      { transform: 'translate(-50%, -50%) translateY(0) rotate(0deg)', opacity: 0 },
+      { opacity: 1, offset: 0.08 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-90, 90)}px, 120vh) rotate(${fxRand(180, 720)}deg)`, opacity: 0.9 },
+    ], fxRand(1300, 2100), fxRand(0, 780), 'cubic-bezier(.2,.35,.45,1)');
+  }
+}
+
+/* 5. 动物狂欢节 */
+function fxAnimalParade(vw, vh) {
+  const animals = ['🐱', '🐶', '🐰', '🦊', '🐼', '🐨', '🐯', '🦁', '🐸', '🐵', '🐷', '🐮', '🦄', '🐧', '🐻', '🐹'];
+
+  // 左右两边进场、横穿整个屏幕的小动物
+  for (let i = 0; i < 40; i++) {
+    const fromLeft = i % 2 === 0;
+    const startX = fromLeft ? -10 : 110;
+    const endX = fromLeft ? 110 : -10;
+    const at = (t) => startX + (endX - startX) * t;
+    const el = document.createElement('span');
+    el.className = 'fx-particle';
+    el.textContent = animals[i % animals.length];
+    el.style.left = '0';
+    el.style.top = fxRand(6, 94) + 'vh';
+    el.style.fontSize = fxRand(38, 78) + 'px';
+    el.style.zIndex = '2';
+    el.style.filter = 'drop-shadow(0 6px 10px rgba(0, 0, 0, 0.16))';
+    fxAdd(el);
+    fxRun(el, [
+      { transform: `translate(-50%, -50%) translateX(${startX}vw) scale(0.7)`, opacity: 0 },
+      { opacity: 1, offset: 0.08 },
+      { transform: `translate(-50%, calc(-50% - ${fxRand(10, 22)}px)) translateX(${at(0.34)}vw) rotate(${fromLeft ? 5 : -5}deg) scale(1)`, opacity: 1, offset: 0.36 },
+      { transform: `translate(-50%, calc(-50% + ${fxRand(10, 22)}px)) translateX(${at(0.64)}vw) rotate(${fromLeft ? -4 : 4}deg) scale(1.04)`, opacity: 1, offset: 0.66 },
+      { transform: `translate(-50%, -50%) translateX(${endX}vw) scale(0.85)`, opacity: 0 },
+    ], fxRand(1900, 2700), fxRand(0, 500), 'linear');
+  }
+
+  // 彩色纸屑从天上落下，铺满全屏
+  for (let i = 0; i < 26; i++) {
+    const shard = document.createElement('div');
+    shard.className = 'fx-shard';
+    shard.style.width = fxRand(6, 12) + 'px';
+    shard.style.height = fxRand(10, 20) + 'px';
+    shard.style.background = choice(CONFETTI_COLORS);
+    shard.style.left = fxRand(0, 100) + 'vw';
+    shard.style.top = '-8vh';
+    fxAdd(shard);
+    fxRun(shard, [
+      { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 0 },
+      { opacity: 0.95, offset: 0.1 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-70, 70)}px, 115vh) rotate(${fxRand(360, 900)}deg)`, opacity: 0.85 },
+    ], fxRand(1700, 2400), fxRand(0, 500), 'cubic-bezier(.2,.4,.45,1)');
+  }
+
+  // 散落全屏的小脚印
+  for (let i = 0; i < 20; i++) {
+    fxEmoji('🐾', fxRand(3, 97), fxRand(8, 92), fxRand(18, 36), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(-25deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 0.9, offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(0.6) rotate(20deg)', opacity: 0 },
+    ], fxRand(1000, 1500), fxRand(0, 900), 'ease-out');
+  }
+
+  // 中间的马戏团大帐篷
+  fxEmoji('🎪', 50, 34, 120, [
+    { transform: 'translate(-50%, -50%) scale(0) rotate(-15deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.1) rotate(3deg)', opacity: 1, offset: 0.35 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 0.95, offset: 0.7 },
+    { transform: 'translate(-50%, -50%) scale(1.3) rotate(8deg)', opacity: 0 },
+  ], 1900, 0, 'ease-out');
+}
+
+/* 6. 爱心海洋 */
+function fxHearts(vw, vh) {
+  const maxR = fxMaxRadius();
+
+  // 从中心向整屏炸开的爱心
+  for (let i = 0; i < 80; i++) {
+    const a = (i / 80) * TAU + fxRand(-0.09, 0.09);
+    const dist = fxRand(0.5, 1.18) * maxR;
+    fxEmoji(choice(['💖', '💕', '💗', '❤️', '💛', '💘', '💝']), 50, 34, fxRand(22, 54), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(-15deg)', opacity: 0 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist * 0.42}px, ${Math.sin(a) * dist * 0.42}px) scale(1.15) rotate(10deg)`, opacity: 1, offset: 0.34 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px) scale(0.55) rotate(-8deg)`, opacity: 0 },
+    ], fxRand(1400, 2100), fxRand(0, 260), 'cubic-bezier(.2,.6,.4,1)');
+  }
+
+  // 从屏幕底部升起的爱心，铺满下半屏
+  for (let i = 0; i < 42; i++) {
+    const el = document.createElement('span');
+    el.className = 'fx-particle';
+    el.textContent = choice(['💖', '💕', '💗', '❤️', '💛', '💘', '💝']);
+    el.style.left = fxRand(1, 99) + 'vw';
+    el.style.top = '112vh';
+    el.style.fontSize = fxRand(22, 52) + 'px';
+    fxAdd(el);
+    const drift = fxRand(-80, 80);
+    const rise = fxRand(98, 140);
+    fxRun(el, [
+      { transform: 'translate(-50%, -50%) scale(0.3) rotate(-12deg)', opacity: 0 },
+      { opacity: 1, offset: 0.12 },
+      { transform: `translate(-50%, -50%) translate(${drift * 0.5}px, -${rise * 0.55}vh) scale(1.05) rotate(9deg)`, opacity: 0.95, offset: 0.55 },
+      { transform: `translate(-50%, -50%) translate(${drift}px, -${rise}vh) scale(1.25) rotate(-6deg)`, opacity: 0 },
+    ], fxRand(1600, 2400), fxRand(0, 550), 'ease-in-out');
+  }
+
+  // 中心大爱心
+  fxEmoji('💖', 50, 34, 110, [
+    { transform: 'translate(-50%, -50%) scale(0)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.3)', opacity: 1, offset: 0.3 },
+    { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0.7 },
+    { transform: 'translate(-50%, -50%) scale(1.5)', opacity: 0 },
+  ], 1600, 0, 'ease-out');
+}
+
+/* 7. 彩带瀑布 */
+function fxRibbons(vw, vh) {
+  const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#b983ff', '#ff9f43', '#ff8fab', '#00c2a8'];
+  for (let i = 0; i < 44; i++) {
+    const el = document.createElement('div');
+    el.className = 'fx-ribbon';
+    const w = fxRand(8, 20);
+    el.style.width = w + 'px';
+    el.style.height = fxRand(16, 34) + 'vh';
+    el.style.left = fxRand(-2, 100) + 'vw';
+    el.style.top = '-45vh';
+    el.style.background = `linear-gradient(180deg, ${choice(colors)}, ${choice(colors)})`;
+    el.style.borderRadius = w / 2 + 'px';
+    el.style.boxShadow = '0 0 12px rgba(255, 255, 255, 0.28)';
+    fxAdd(el);
+    const sway = fxRand(40, 150) * (i % 2 ? 1 : -1);
+    const rot = fxRand(-45, 45);
+    const fall = fxRand(150, 185);
+    fxRun(el, [
+      { transform: 'translate(-50%, 0) rotate(0deg)', opacity: 0 },
+      { transform: `translate(-50%, 12vh) rotate(${rot * 0.4}deg)`, opacity: 0.95, offset: 0.12 },
+      { transform: `translate(calc(-50% + ${sway}px), ${fall * 0.55}vh) rotate(${rot}deg)`, opacity: 0.95, offset: 0.55 },
+      { transform: `translate(calc(-50% - ${sway * 0.6}px), ${fall}vh) rotate(${-rot}deg)`, opacity: 0.85 },
+    ], fxRand(2000, 2600), fxRand(0, 500), 'ease-in-out');
+  }
+
+  // 满屏闪粉
+  for (let i = 0; i < 30; i++) {
+    fxEmoji(choice(['✨', '⭐', '💫']), fxRand(0, 100), fxRand(0, 100), fxRand(14, 32), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1) rotate(60deg)', opacity: 1, offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(0.2) rotate(150deg)', opacity: 0 },
+    ], fxRand(1000, 1600), fxRand(0, 900), 'ease-out');
+  }
+}
+
+/* 8. 彩虹音符 */
+function fxMusicNotes(vw, vh) {
+  const palette = ['#ff4d8d', '#ff8a3d', '#ffd93d', '#41d39f', '#4dabf7', '#b983ff', '#ff5ecb', '#00d4ff'];
+  const glyphs = ['♪', '♫', '♬', '♩'];
+  const glow = (el, color) => {
+    el.style.color = color;
+    el.style.fontFamily = '"Arial Black", "PingFang SC", system-ui, sans-serif';
+    el.style.textShadow = `0 0 10px ${color}, 0 0 26px ${color}, 0 0 48px ${color}`;
+  };
+
+  // 从底部升起的彩色音符
+  for (let i = 0; i < 52; i++) {
+    const color = palette[i % palette.length];
+    const x1 = fxRand(-90, 90);
+    const x2 = fxRand(-130, 130);
+    const y1 = fxRand(55, 82);
+    const y2 = fxRand(112, 150);
+    const el = fxEmoji(choice(glyphs), fxRand(3, 97), 112, fxRand(30, 64), [
+      { transform: 'translate(-50%, -50%) rotate(-20deg) scale(0.6)', opacity: 0 },
+      { opacity: 1, offset: 0.12 },
+      { transform: `translate(-50%, -50%) translate(${x1}px, -${y1}vh) rotate(${fxRand(-25, 25)}deg) scale(1)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(-50%, -50%) translate(${x2}px, -${y2}vh) rotate(${fxRand(-35, 35)}deg) scale(1.15)`, opacity: 0 },
+    ], fxRand(1600, 2400), fxRand(0, 550), 'ease-in-out');
+    glow(el, color);
+  }
+
+  // 从中心向四周绽放的音符
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * TAU + fxRand(-0.1, 0.1);
+    const dist = fxRand(0.35, 1.05) * fxMaxRadius();
+    const color = palette[(i + 3) % palette.length];
+    const el = fxEmoji(choice(glyphs), 50, 34, fxRand(28, 56), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(-30deg)', opacity: 0 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist * 0.45}px, ${Math.sin(a) * dist * 0.45}px) scale(1.2) rotate(20deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px) scale(0.5) rotate(-10deg)`, opacity: 0 },
+    ], fxRand(1400, 2000), fxRand(0, 220), 'cubic-bezier(.2,.6,.4,1)');
+    glow(el, color);
+  }
+
+  // 彩色乐器一起摇摆
+  const instruments = ['🎸', '🎺', '🎷', '🎹', '🥁', '🎤', '🪕', '🎻'];
+  for (let i = 0; i < 14; i++) {
+    const el = fxEmoji(instruments[i % instruments.length], fxRand(4, 96), 112, fxRand(30, 56), [
+      { transform: 'translate(-50%, -50%) rotate(-12deg) scale(0.7)', opacity: 0 },
+      { opacity: 1, offset: 0.12 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-60, 60)}px, -${fxRand(60, 86)}vh) rotate(${fxRand(-18, 18)}deg) scale(1)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-100, 100)}px, -${fxRand(105, 135)}vh) rotate(${fxRand(-25, 25)}deg) scale(1.1)`, opacity: 0 },
+    ], fxRand(1700, 2400), fxRand(0, 600), 'ease-in-out');
+    el.style.filter = `hue-rotate(${fxRand(0, 40)}deg) drop-shadow(0 0 12px rgba(255, 255, 255, 0.65))`;
+  }
+
+  // 底部的彩色音浪条
+  for (let i = 0; i < 28; i++) {
+    const color = palette[i % palette.length];
+    const bar = document.createElement('div');
+    bar.className = 'fx-eq';
+    bar.style.left = ((i + 0.5) / 28) * 100 + 'vw';
+    bar.style.width = '3.6vw';
+    bar.style.height = fxRand(6, 20) + 'vh';
+    bar.style.background = `linear-gradient(180deg, ${color}, ${palette[(i + 3) % palette.length]})`;
+    bar.style.boxShadow = `0 0 18px ${color}`;
+    bar.style.opacity = '0';
+    fxAdd(bar);
+    fxRun(bar, [
+      { transform: 'translate(-50%, 100%) scaleY(0.2)', opacity: 0 },
+      { transform: 'translate(-50%, 0) scaleY(1)', opacity: 0.85, offset: 0.25 },
+      { transform: `translate(-50%, 0) scaleY(${fxRand(0.35, 0.9)})`, opacity: 0.8, offset: 0.55 },
+      { transform: 'translate(-50%, 0) scaleY(1.1)', opacity: 0.85, offset: 0.75 },
+      { transform: 'translate(-50%, 30%) scaleY(0.1)', opacity: 0 },
+    ], fxRand(1200, 1800), i * 40, 'ease-in-out');
+  }
+
+  // 满屏闪粉
+  for (let i = 0; i < 26; i++) {
+    fxEmoji(choice(['✨', '💫']), fxRand(0, 100), fxRand(0, 100), fxRand(14, 30), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1.1) rotate(90deg)', opacity: 1, offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(0.2) rotate(180deg)', opacity: 0 },
+    ], fxRand(1000, 1500), fxRand(0, 900), 'ease-out');
+  }
+}
+
+/* 9. 泡泡海洋 */
+function fxBubbles(vw, vh) {
+  for (let i = 0; i < 38; i++) {
+    const size = fxRand(12, 66);
+    const el = document.createElement('div');
+    el.className = 'fx-bubble';
+    el.style.width = el.style.height = size + 'px';
+    el.style.left = fxRand(2, 98) + 'vw';
+    el.style.top = '112vh';
+    fxAdd(el);
+    const drift = fxRand(-60, 60);
+    const y1 = fxRand(55, 78);
+    const y2 = fxRand(108, 145);
+    fxRun(el, [
+      { transform: 'translate(-50%, -50%) scale(0.35)', opacity: 0 },
+      { opacity: 0.9, offset: 0.15 },
+      { transform: `translate(-50%, -50%) translate(${drift * 0.5}px, -${y1}vh) scale(1)`, opacity: 0.85, offset: 0.6 },
+      { transform: `translate(-50%, -50%) translate(${drift}px, -${y2}vh) scale(1.15)`, opacity: 0 },
+    ], fxRand(1800, 2600), fxRand(0, 500), 'ease-in-out');
+  }
+}
+
+/* 10. 彩虹喷泉 */
+function fxFountain(vw, vh) {
+  const palette = ['#ff4d8d', '#ff8a3d', '#ffd93d', '#41d39f', '#4dabf7', '#b983ff', '#ff5ecb', '#00d4ff'];
+  const sources = [12, 30, 50, 70, 88];
+
+  // 底部的彩虹光池
+  const base = document.createElement('div');
+  base.className = 'fx-fountain-base';
+  base.style.background = 'linear-gradient(90deg, #ff4d8d, #ff8a3d, #ffd93d, #41d39f, #4dabf7, #b983ff, #ff5ecb)';
+  fxAdd(base);
+  fxRun(base, [
+    { transform: 'translateX(-50%) scaleY(0.4)', opacity: 0 },
+    { transform: 'translateX(-50%) scaleY(1)', opacity: 0.85, offset: 0.2 },
+    { transform: 'translateX(-50%) scaleY(0.9)', opacity: 0.7, offset: 0.7 },
+    { transform: 'translateX(-50%) scaleY(0.5)', opacity: 0 },
+  ], 2000, 0, 'ease-out');
+
+  // 五个喷泉一起喷出彩色水珠，铺满整个屏幕
+  sources.forEach((sx, si) => {
+    for (let i = 0; i < 24; i++) {
+      const color = palette[(i + si * 3) % palette.length];
+      const drift = fxRand(-16, 16);
+      const h = fxRand(34, 72);
+      const size = fxRand(6, 14);
+      const dot = document.createElement('div');
+      dot.className = 'fx-dot';
+      dot.style.width = dot.style.height = size + 'px';
+      dot.style.background = color;
+      dot.style.boxShadow = `0 0 ${size}px ${color}, 0 0 ${size * 2.2}px ${color}`;
+      dot.style.left = sx + 'vw';
+      dot.style.top = '102vh';
+      fxAdd(dot);
+      fxRun(dot, [
+        { transform: 'translate(-50%, -50%) translate(0, 0) scale(0.5)', opacity: 0 },
+        { opacity: 1, offset: 0.1 },
+        { transform: `translate(-50%, -50%) translate(${drift * 0.4}vw, -${h}vh) scale(1)`, opacity: 1, offset: 0.45 },
+        { transform: `translate(-50%, -50%) translate(${drift * 0.8}vw, -${h * 0.55}vh) scale(0.8)`, opacity: 0.9, offset: 0.75 },
+        { transform: `translate(-50%, -50%) translate(${drift}vw, -2vh) scale(0.4)`, opacity: 0 },
+      ], fxRand(1500, 2100), fxRand(0, 900), 'cubic-bezier(.25,.5,.5,1)');
+    }
+  });
+
+  // 跟着水花升起的小星星和水滴
+  for (let i = 0; i < 28; i++) {
+    const sx = choice(sources);
+    const drift = fxRand(-14, 14);
+    const h = fxRand(36, 70);
+    fxEmoji(choice(['✨', '💧', '💎', '⭐']), sx, 102, fxRand(16, 34), [
+      { transform: 'translate(-50%, -50%) scale(0)', opacity: 0 },
+      { opacity: 1, offset: 0.12 },
+      { transform: `translate(calc(-50% + ${drift * 0.4}vw), calc(-50% - ${h}vh)) scale(1) rotate(40deg)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(calc(-50% + ${drift}vw), calc(-50% - 2vh)) scale(0.4) rotate(120deg)`, opacity: 0 },
+    ], fxRand(1500, 2100), fxRand(0, 900), 'cubic-bezier(.25,.5,.5,1)');
+  }
+
+  // 中间的大彩虹
+  fxEmoji('🌈', 50, 30, 130, [
+    { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.05)', opacity: 0.95, offset: 0.35 },
+    { transform: 'translate(-50%, -50%) scale(0.95)', opacity: 0.9, offset: 0.72 },
+    { transform: 'translate(-50%, -50%) scale(1.25)', opacity: 0 },
+  ], 2000, 0, 'ease-out');
+}
+
+/* 11. 彩虹万花筒 */
+function fxKaleidoscope(vw, vh) {
+  const palette = ['#ff4d8d', '#ff8a3d', '#ffd93d', '#41d39f', '#4dabf7', '#b983ff', '#ff5ecb', '#00d4ff'];
+  const seg = 360 / 16;
+  const stops = [];
+  for (let i = 0; i < 16; i++) {
+    const c = palette[i % palette.length];
+    stops.push(`${c} ${i * seg}deg ${(i + 1) * seg}deg`);
+  }
+  const wheel = `conic-gradient(from 0deg, ${stops.join(', ')})`;
+
+  // 巨型彩色万花筒圆盘
+  for (let i = 0; i < 7; i++) {
+    const disc = document.createElement('div');
+    disc.className = 'fx-kaleido';
+    disc.style.width = disc.style.height = fxRand(40, 95) + 'vw';
+    disc.style.left = fxRand(10, 90) + 'vw';
+    disc.style.top = fxRand(12, 88) + 'vh';
+    disc.style.background = wheel;
+    disc.style.filter = `blur(${fxRand(0, 2)}px) saturate(1.3)`;
+    fxAdd(disc);
+    const dir = i % 2 ? -1 : 1;
+    fxRun(disc, [
+      { transform: 'translate(-50%, -50%) rotate(0deg) scale(0.3)', opacity: 0 },
+      { opacity: 0.8, offset: 0.22 },
+      { transform: `translate(-50%, -50%) rotate(${dir * 220}deg) scale(1)`, opacity: 0.7, offset: 0.62 },
+      { transform: `translate(-50%, -50%) rotate(${dir * 400}deg) scale(1.2)`, opacity: 0 },
+    ], fxRand(2400, 2800), i * 80, 'linear');
+  }
+
+  // 向四周飞散的棱镜碎片
+  for (let i = 0; i < 44; i++) {
+    const a = (i / 44) * TAU + fxRand(-0.06, 0.06);
+    const dist = fxRand(0.3, 1.1) * fxMaxRadius();
+    const size = fxRand(14, 36);
+    const el = document.createElement('div');
+    el.className = 'fx-prism';
+    el.style.width = el.style.height = size + 'px';
+    el.style.background = `linear-gradient(135deg, ${choice(palette)}, ${choice(palette)})`;
+    el.style.left = '50%';
+    el.style.top = '34%';
+    fxAdd(el);
+    fxRun(el, [
+      { transform: 'translate(-50%, -50%) rotate(0deg) scale(0)', opacity: 0 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist * 0.4}px, ${Math.sin(a) * dist * 0.4}px) rotate(${fxRand(60, 160)}deg) scale(1)`, opacity: 0.95, offset: 0.35 },
+      { transform: `translate(-50%, -50%) translate(${Math.cos(a) * dist}px, ${Math.sin(a) * dist}px) rotate(${fxRand(220, 480)}deg) scale(0.5)`, opacity: 0 },
+    ], fxRand(1600, 2200), fxRand(0, 300), 'cubic-bezier(.2,.6,.4,1)');
+  }
+
+  // 满屏钻石和闪光
+  for (let i = 0; i < 44; i++) {
+    fxEmoji(choice(['✨', '💎', '💫', '⭐']), fxRand(2, 98), fxRand(4, 96), fxRand(16, 40), [
+      { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1.15) rotate(90deg)', opacity: 1, offset: 0.4 },
+      { transform: 'translate(-50%, -50%) scale(0.3) rotate(200deg)', opacity: 0 },
+    ], fxRand(1200, 1800), fxRand(0, 900), 'ease-out');
+  }
+
+  // 中心的彩虹星芒
+  fxEmoji('🔮', 50, 34, 110, [
+    { transform: 'translate(-50%, -50%) scale(0) rotate(-20deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.15) rotate(4deg)', opacity: 1, offset: 0.35 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 0.95, offset: 0.72 },
+    { transform: 'translate(-50%, -50%) scale(1.4) rotate(10deg)', opacity: 0 },
+  ], 1900, 0, 'ease-out');
+}
+
+/* 12. 冠军庆典 */
+function fxChampion(vw, vh) {
+  ['#ffd93d', '#fff3b0', '#ffb300'].forEach((color, i) => {
+    const ring = document.createElement('div');
+    ring.className = 'fx-ring';
+    ring.style.borderColor = color;
+    ring.style.left = '50%';
+    ring.style.top = '34%';
+    fxAdd(ring);
+    fxRun(ring, [
+      { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0.95 },
+      { transform: 'translate(-50%, -50%) scale(5.2)', opacity: 0 },
+    ], 1400, i * 150, 'cubic-bezier(.2,.65,.3,1)');
+  });
+  for (let i = 0; i < 80; i++) {
+    const shard = document.createElement('div');
+    shard.className = 'fx-shard';
+    shard.style.width = fxRand(5, 11) + 'px';
+    shard.style.height = fxRand(9, 18) + 'px';
+    shard.style.background = choice(['#ffd93d', '#ffe066', '#ffb300', '#fff3b0', '#ff8a3d']);
+    shard.style.left = fxRand(0, 100) + 'vw';
+    shard.style.top = '-10vh';
+    fxAdd(shard);
+    fxRun(shard, [
+      { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 0 },
+      { opacity: 1, offset: 0.1 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-80, 80)}px, 120vh) rotate(${fxRand(360, 900)}deg)`, opacity: 0.9 },
+    ], fxRand(1600, 2400), fxRand(0, 600), 'cubic-bezier(.2,.4,.45,1)');
+  }
+  [[22, 22], [78, 22], [30, 46], [70, 46]].forEach(([x, y], i) => fxFireworkBurst(x, y, 180 + i * 180));
+  fxEmoji('🏆', 50, 34, 120, [
+    { transform: 'translate(-50%, -50%) scale(0) rotate(-20deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.3) rotate(6deg)', opacity: 1, offset: 0.3 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.68 },
+    { transform: 'translate(-50%, -50%) scale(1.25) rotate(10deg)', opacity: 0 },
+  ], 2000, 0, 'ease-out');
+  fxEmoji('👑', 50, 20, 54, [
+    { transform: 'translate(-50%, -50%) scale(0) rotate(-30deg)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(1.2) rotate(8deg)', opacity: 1, offset: 0.4 },
+    { transform: 'translate(-50%, -50%) scale(1) rotate(-6deg)', opacity: 0.95, offset: 0.8 },
+    { transform: 'translate(-50%, -50%) scale(1.3) rotate(0deg)', opacity: 0 },
+  ], 2000, 150, 'ease-out');
+}
+
+function fxBanner(emoji, title, sub, ink) {
+  const banner = document.createElement('div');
+  banner.className = 'fx-banner';
+  banner.style.setProperty('--fx-ink', ink);
+  banner.innerHTML = `<div class="fx-banner-emoji">${emoji}</div><div class="fx-banner-title">${title}</div><div class="fx-banner-sub">${sub}</div>`;
+  fxAdd(banner);
+  return banner;
+}
+
+function playLevelCelebration(level) {
+  if (!fxLayer) return;
+  fxClear();
+  const idx = Math.max(0, Math.min(LEVEL_FX.length - 1, level - 1));
+  const cfg = LEVEL_FX[idx];
+  const vw = window.innerWidth / 100;
+  const vh = window.innerHeight / 100;
+
+  const tint = document.createElement('div');
+  tint.className = 'fx-tint';
+  tint.style.background = cfg.tint;
+  fxAdd(tint);
+  const tintAnim = tint.animate(
+    [{ opacity: 0 }, { opacity: 1, offset: 0.16 }, { opacity: 0 }],
+    { duration: 1500 * FX_SLOW, easing: 'ease-out', fill: 'both' }
+  );
+  tintAnim.onfinish = () => tint.remove();
+
+  fxBanner(cfg.emoji, `第 ${level} 关`, cfg.name, cfg.ink);
+
+  const builders = [fxRainbow, fxSunflower, fxBalloons, fxStarRain, fxAnimalParade, fxHearts, fxRibbons, fxMusicNotes, fxBubbles, fxFountain, fxKaleidoscope, fxChampion];
+  builders[idx](vw, vh);
+
+  fxCleanupTimer = setTimeout(() => {
+    fxCleanupTimer = null;
+    fxClear();
+  }, 5800);
+}
+
+/* 12 关之后：每多 300 分发射一次大火箭 */
+function playRocketCelebration(count = 1) {
+  if (!fxLayer) return;
+  fxClear();
+  const Wpx = window.innerWidth;
+  const Hpx = window.innerHeight;
+  const sub = count > 1 ? `+300 分 · 第 ${count} 次发射` : '+300 分 · 继续冲！';
+
+  const tint = document.createElement('div');
+  tint.className = 'fx-tint';
+  tint.style.background = 'radial-gradient(circle at 30% 80%, rgba(255,190,90,0.55), rgba(255,110,80,0.25) 40%, rgba(120,160,255,0.12) 75%, transparent)';
+  fxAdd(tint);
+  const tintAnim = tint.animate(
+    [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, { opacity: 0 }],
+    { duration: 2200 * FX_SLOW, easing: 'ease-out', fill: 'both' }
+  );
+  tintAnim.onfinish = () => tint.remove();
+
+  fxBanner('🚀', '火箭发射！', sub, '#ff6b3d');
+
+  const startX = -0.2 * Wpx;
+  const startY = 1.15 * Hpx;
+  const endX = 1.12 * Wpx;
+  const endY = -0.28 * Hpx;
+
+  // 大火箭本体：从左下角斜穿整个屏幕飞到右上角
+  const rocket = document.createElement('span');
+  rocket.className = 'fx-particle';
+  rocket.textContent = '🚀';
+  rocket.style.left = '0';
+  rocket.style.top = '0';
+  rocket.style.fontSize = Math.max(140, Math.min(340, Math.min(Wpx, Hpx) * 0.34)) + 'px';
+  rocket.style.zIndex = '4';
+  rocket.style.filter = 'drop-shadow(0 10px 24px rgba(0,0,0,0.25))';
+  fxAdd(rocket);
+  fxRun(rocket, [
+    { transform: `translate(-50%, -50%) translate(${startX}px, ${startY}px) scale(0.7) rotate(-8deg)`, opacity: 0 },
+    { transform: `translate(-50%, -50%) translate(${startX + (endX - startX) * 0.12}px, ${startY + (endY - startY) * 0.12}px) scale(0.9) rotate(0deg)`, opacity: 1, offset: 0.12 },
+    { transform: `translate(-50%, -50%) translate(${startX + (endX - startX) * 0.55}px, ${startY + (endY - startY) * 0.55}px) scale(1.05) rotate(0deg)`, opacity: 1, offset: 0.55 },
+    { transform: `translate(-50%, -50%) translate(${endX}px, ${endY}px) scale(1.2) rotate(6deg)`, opacity: 0.95 },
+  ], 2200, 0, 'cubic-bezier(.35,.1,.65,.9)');
+
+  // 火焰和烟雾尾迹
+  for (let i = 0; i < 60; i++) {
+    const t = Math.random();
+    const x = startX + (endX - startX) * t;
+    const y = startY + (endY - startY) * t;
+    const dot = document.createElement('div');
+    dot.className = 'fx-dot';
+    const size = fxRand(6, 22) * (0.7 + t * 0.8);
+    dot.style.width = dot.style.height = size + 'px';
+    dot.style.background = choice(['#ffd93d', '#ffb347', '#ff6b3d', '#fff3b0', 'rgba(255,255,255,0.9)']);
+    dot.style.left = x + 'px';
+    dot.style.top = y + 'px';
+    dot.style.zIndex = '3';
+    fxAdd(dot);
+    fxRun(dot, [
+      { transform: 'translate(-50%, -50%) scale(0)', opacity: 0 },
+      { opacity: 0.95, offset: 0.16 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-55, 25)}px, ${fxRand(20, 100)}px) scale(${fxRand(0.5, 1.1)})`, opacity: 0 },
+    ], fxRand(600, 1100), t * 2200, 'ease-out');
+  }
+
+  // 尾部的火苗和小星星
+  for (let i = 0; i < 22; i++) {
+    const t = Math.random();
+    const xVw = (startX + (endX - startX) * t) / Wpx * 100;
+    const yVh = (startY + (endY - startY) * t) / Hpx * 100;
+    fxEmoji(choice(['🔥', '💨', '✨']), xVw, yVh, fxRand(24, 54), [
+      { transform: 'translate(-50%, -50%) scale(0)', opacity: 0 },
+      { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.95, offset: 0.2 },
+      { transform: `translate(-50%, -50%) translate(${fxRand(-70, 10)}px, ${fxRand(30, 110)}px) scale(0.2) rotate(${fxRand(-30, 30)}deg)`, opacity: 0 },
+    ], fxRand(700, 1200), t * 2200, 'ease-out');
+  }
+
+  // 起飞点冲击波
+  const launchRing = document.createElement('div');
+  launchRing.className = 'fx-ring';
+  launchRing.style.left = '10vw';
+  launchRing.style.top = '90vh';
+  launchRing.style.borderColor = '#ffb347';
+  fxAdd(launchRing);
+  fxRun(launchRing, [
+    { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0.9 },
+    { transform: 'translate(-50%, -50%) scale(3.6)', opacity: 0 },
+  ], 900, 0, 'ease-out');
+
+  flashScreen('255,200,120', 0.16);
+  shakeScreen(5);
+  SFX.cheer();
+
+  fxCleanupTimer = setTimeout(() => {
+    fxCleanupTimer = null;
+    fxClear();
+  }, 6800);
+}
+
+function scheduleOpeningCelebration() {
+  if (fxStartTimer) clearTimeout(fxStartTimer);
+  fxStartTimer = setTimeout(() => {
+    fxStartTimer = null;
+    if (state.screen === 'game' && state.running && !state.paused) playLevelCelebration(1);
+  }, 520);
+}
+
 function addFloat(x, y, text, color, size) {
   state.floats.push({
     x: Math.min(Math.max(x, 60), Math.max(61, W - 60)),
@@ -730,11 +1607,14 @@ function showScreen(name) {
 
 /* ---------------- 游戏流程 ---------------- */
 function startGame(mode) {
+  cancelSpeech();
+  fxClear();
   state.mode = mode;
   Object.assign(state, {
     items: [], particles: [], floats: [],
     shootingStars: [], shake: 0, flash: 0, hitCount: 0,
     score: 0, combo: 0, bestCombo: 0, lives: 3, level: 1,
+    nextRocket: 3600, rocketCount: 0,
     spawnTimer: 600, lockedId: null,
     running: true, paused: false, time: 0,
   });
@@ -749,10 +1629,12 @@ function startGame(mode) {
   showScreen('game');
   resize();
   updateKeyboardGuidance();
-  addFloat(W / 2, H * 0.3, '开始吧！' + MODES[mode].emoji, '#ff8a3d', 30);
+  scheduleOpeningCelebration();
 }
 
 function gameOver() {
+  cancelSpeech();
+  fxClear();
   state.running = false;
   const key = 'youxi-best-' + state.mode;
   const old = +(store.get(key) || 0);
@@ -775,9 +1657,15 @@ function togglePause() {
   $('btn-pause').textContent = state.paused ? '▶️' : '⏸️';
   keyboardPanel.classList.toggle('paused', state.paused);
   if (!state.paused) updateKeyboardGuidance();
+  else {
+    cancelSpeech();
+    fxClear();
+  }
 }
 
 function quitToMenu() {
+  cancelSpeech();
+  fxClear();
   state.running = false;
   state.paused = false;
   $('pause-overlay').classList.add('hidden');
@@ -836,6 +1724,9 @@ function hit(it) {
     addFloat(it.x + it.w / 2, it.y + it.h / 2, '+30 ⭐', '#12a35b', 24);
     if (Math.random() < 0.35) addFloat(it.x + it.w / 2, it.y - 30, choice(PRAISES), '#ff8a3d', 20);
     SFX.cheer();
+    if (it.kind === 'word') speakAfterExplosion(it.seq, 'en-US', 0.8);
+    else if (it.kind === 'letter') speakAfterExplosion(LETTER_NAMES[it.seq] || it.seq, 'en-US', 0.8);
+    else if (it.kind === 'pinyin') speakAfterExplosion(it.hanzi, 'zh-CN', 0.8);
   } else {
     addFloat(it.x + it.w / 2, it.y - 8, '+10', '#12a35b', 18);
   }
@@ -891,9 +1782,16 @@ function update(dt) {
     state.level = lv;
     updateLevel();
     SFX.levelUp();
-    addFloat(W / 2, H * 0.32, `🎉 升到第 ${lv} 关！速度加快啦`, '#ff6b3d', 30);
-    fireworks(3);
+    fireworks(2);
     flashScreen('255,255,255', 0.12);
+    playLevelCelebration(lv);
+  }
+
+  // 第 12 关之后，每多 300 分发射一次大火箭
+  if (state.level >= 12 && state.score >= state.nextRocket) {
+    state.rocketCount++;
+    state.nextRocket = (Math.floor(state.score / 300) + 1) * 300;
+    playRocketCelebration(state.rocketCount);
   }
 
   // 生成掉落物
@@ -1087,16 +1985,20 @@ function drawItem(it) {
     ctx.fillStyle = '#37364e';
     ctx.fillText(it.seq.toUpperCase(), x + it.w / 2, y + it.h / 2 + 2);
   } else if (it.kind === 'word') {
+    const tx = x + 20;
+    const ty = y + it.h * 0.38;
     ctx.font = FONT(26);
     ctx.textAlign = 'left';
-    const tx = x + 20;
-    const ty = y + it.h / 2;
     ctx.fillStyle = '#37364e';
     ctx.fillText(it.seq, tx, ty);
     if (it.typed > 0) {
       ctx.fillStyle = '#12a35b';
       ctx.fillText(it.seq.slice(0, it.typed), tx, ty);
     }
+    // 中文意思
+    ctx.font = FONT(15);
+    ctx.fillStyle = 'rgba(70, 80, 105, 0.78)';
+    ctx.fillText(it.trans, tx, y + it.h * 0.76);
   } else {
     // 汉字 + 拼音进度
     ctx.textAlign = 'center';
@@ -1751,7 +2653,8 @@ $('btn-retry').addEventListener('click', (e) => { startGame(state.mode); e.curre
 $('btn-menu').addEventListener('click', (e) => { showScreen('start'); e.currentTarget.blur(); });
 $('btn-pause').addEventListener('click', (e) => { togglePause(); e.currentTarget.blur(); });
 $('btn-mute').addEventListener('click', (e) => {
-  $('btn-mute').textContent = SFX.toggle() ? '🔇' : '🔊';
+  if (SFX.toggle()) cancelSpeech();
+  $('btn-mute').textContent = SFX.muted ? '🔇' : '🔊';
   e.currentTarget.blur();
 });
 
