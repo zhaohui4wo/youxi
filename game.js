@@ -1447,32 +1447,19 @@ function playLevelCelebration(level) {
   const builders = [fxRainbow, fxSunflower, fxBalloons, fxStarRain, fxAnimalParade, fxHearts, fxRibbons, fxMusicNotes, fxBubbles, fxFountain, fxKaleidoscope, fxChampion];
   builders[idx](vw, vh);
 
+  // 每一关在原有动画的基础上，再额外发射一枚火箭
+  spawnRocketFX();
+
   fxCleanupTimer = setTimeout(() => {
     fxCleanupTimer = null;
     fxClear();
   }, 5800);
 }
 
-/* 12 关之后：每多 300 分发射一次大火箭 */
-function playRocketCelebration(count = 1) {
-  if (!fxLayer) return;
-  fxClear();
+/* 火箭穿屏动画：可单独使用，也可叠加在关卡庆祝上 */
+function spawnRocketFX() {
   const Wpx = window.innerWidth;
   const Hpx = window.innerHeight;
-  const sub = count > 1 ? `+300 分 · 第 ${count} 次发射` : '+300 分 · 继续冲！';
-
-  const tint = document.createElement('div');
-  tint.className = 'fx-tint';
-  tint.style.background = 'radial-gradient(circle at 30% 80%, rgba(255,190,90,0.55), rgba(255,110,80,0.25) 40%, rgba(120,160,255,0.12) 75%, transparent)';
-  fxAdd(tint);
-  const tintAnim = tint.animate(
-    [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, { opacity: 0 }],
-    { duration: 2200 * FX_SLOW, easing: 'ease-out', fill: 'both' }
-  );
-  tintAnim.onfinish = () => tint.remove();
-
-  fxBanner('🚀', '火箭发射！', sub, '#ff6b3d');
-
   const startX = -0.2 * Wpx;
   const startY = 1.15 * Hpx;
   const endX = 1.12 * Wpx;
@@ -1539,6 +1526,27 @@ function playRocketCelebration(count = 1) {
     { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 0.9 },
     { transform: 'translate(-50%, -50%) scale(3.6)', opacity: 0 },
   ], 900, 0, 'ease-out');
+}
+
+/* 12 关之后：每多 300 分发射一次大火箭 */
+function playRocketCelebration(count = 1) {
+  if (!fxLayer) return;
+  fxClear();
+  const sub = count > 1 ? `+300 分 · 第 ${count} 次发射` : '+300 分 · 继续冲！';
+
+  const tint = document.createElement('div');
+  tint.className = 'fx-tint';
+  tint.style.background = 'radial-gradient(circle at 30% 80%, rgba(255,190,90,0.55), rgba(255,110,80,0.25) 40%, rgba(120,160,255,0.12) 75%, transparent)';
+  fxAdd(tint);
+  const tintAnim = tint.animate(
+    [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, { opacity: 0 }],
+    { duration: 2200 * FX_SLOW, easing: 'ease-out', fill: 'both' }
+  );
+  tintAnim.onfinish = () => tint.remove();
+
+  fxBanner('🚀', '火箭发射！', sub, '#ff6b3d');
+
+  spawnRocketFX();
 
   flashScreen('255,200,120', 0.16);
   shakeScreen(5);
