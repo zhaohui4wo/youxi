@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="给小朋友的打字小游戏：字母、单词、拼音三种模式">
 <title>字母大冒险 🚀 打字小游戏</title>
-<link rel="stylesheet" href="style.css?v=20261109-1">
+<link rel="stylesheet" href="style.css?v=20261109-2">
 </head>
 <body>
 <div id="app">
@@ -24,112 +24,115 @@
 
   <!-- 开始界面 -->
   <section id="screen-start" class="screen">
-    <!-- 左右两侧的卡通小马伙伴（原创简笔 SVG 插画） -->
-    <div class="pony pony-left pony-fluttershy" aria-hidden="true">
-      <svg class="pony-svg" viewBox="0 0 210 192">
-        <defs>
-          <linearGradient id="fsMane" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#ffd8e7"/>
-            <stop offset="0.5" stop-color="#f9a8c9"/>
-            <stop offset="1" stop-color="#ef7fb2"/>
-          </linearGradient>
-          <linearGradient id="fsTail" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#f9a8c9"/>
-            <stop offset="1" stop-color="#ffd8e7"/>
-          </linearGradient>
-        </defs>
-        <path class="mane2" fill="url(#fsTail)" d="M178 98 Q204 118 190 140 Q202 154 184 164 Q166 174 158 156 Q168 148 166 134 Q176 122 170 106 Z"/>
-        <rect class="coat" x="150" y="148" width="15" height="40" rx="7"/>
-        <rect class="coat" x="168" y="144" width="15" height="44" rx="7"/>
-        <rect class="coat" x="94" y="150" width="14" height="38" rx="7"/>
-        <rect class="coat" x="112" y="152" width="14" height="36" rx="7"/>
-        <ellipse class="coat" cx="130" cy="128" rx="56" ry="40"/>
-        <path class="wing" d="M124 108 Q104 78 124 62 Q136 52 146 60 Q134 66 132 78 Q144 70 152 78 Q140 84 138 96 Q148 94 154 100 Q142 106 136 116 Z"/>
-        <circle class="coat" cx="72" cy="78" r="32"/>
-        <ellipse class="coat-light" cx="96" cy="90" rx="16" ry="12"/>
-        <ellipse class="eye-white" cx="80" cy="75" rx="9" ry="11"/>
-        <ellipse class="iris" cx="84" cy="78" rx="5.5" ry="6"/>
-        <circle class="pupil" cx="85" cy="80" r="2.5"/>
-        <circle class="eye-glint" cx="87" cy="73.5" r="2.2"/>
-        <circle class="eye-glint" cx="82" cy="84" r="1.1"/>
-        <circle class="dot" cx="100" cy="88" r="1.6"/>
-        <path class="smile" d="M94 96 Q99 100 105 93"/>
-        <ellipse class="blush" cx="60" cy="92" rx="5.5" ry="3.2"/>
-        <g class="mark">
-          <g transform="translate(130 121) rotate(-15)">
-            <circle cx="-2.6" cy="-1.4" r="2.5"/>
-            <circle cx="2.6" cy="-1.4" r="2.5"/>
-            <circle cx="0" cy="1.2" r="2.9"/>
-            <circle class="mark2" cx="0" cy="0" r="0.9"/>
-          </g>
-          <g transform="translate(145 115) rotate(10)">
-            <circle cx="-2.2" cy="-1.2" r="2.1"/>
-            <circle cx="2.2" cy="-1.2" r="2.1"/>
-            <circle cx="0" cy="1" r="2.4"/>
-            <circle class="mark2" cx="0" cy="0" r="0.8"/>
-          </g>
-          <g transform="translate(138 134) rotate(22)">
-            <circle cx="-2.2" cy="-1.2" r="2.1"/>
-            <circle cx="2.2" cy="-1.2" r="2.1"/>
-            <circle cx="0" cy="1" r="2.4"/>
-            <circle class="mark2" cx="0" cy="0" r="0.8"/>
-          </g>
-        </g>
-        <path class="mane" fill="url(#fsMane)" d="M42 70 Q40 34 76 30 Q104 34 108 52 Q94 64 80 54 Q64 70 42 70 Z"/>
-        <path class="mane2" fill="url(#fsTail)" d="M52 66 Q34 94 50 116 Q64 106 58 84 Q62 72 52 66 Z"/>
-        <path class="coat" d="M58 52 Q50 30 66 28 Q80 30 82 52 Q70 44 58 52 Z"/>
-        <path class="ear-inner" d="M62 47 Q58 36 66 34 Q73 36 75 47 Q68 42 62 47 Z"/>
-      </svg>
-      <span class="pony-name">柔柔</span>
-    </div>
-
-    <div class="pony pony-right pony-twilight" aria-hidden="true">
-      <svg class="pony-svg" viewBox="0 0 210 192">
-        <defs>
-          <linearGradient id="twMane" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#3f3468"/>
-            <stop offset="0.45" stop-color="#6b4fa8"/>
-            <stop offset="0.75" stop-color="#a55fd4"/>
-            <stop offset="1" stop-color="#ef8fb2"/>
-          </linearGradient>
-          <linearGradient id="twTail" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#4a3a80"/>
-            <stop offset="0.6" stop-color="#8b5cc4"/>
-            <stop offset="1" stop-color="#ef8fb2"/>
-          </linearGradient>
-        </defs>
-        <path class="mane2" fill="url(#twTail)" d="M178 98 Q204 118 190 140 Q202 154 184 164 Q166 174 158 156 Q168 148 166 134 Q176 122 170 106 Z"/>
-        <rect class="coat" x="150" y="148" width="15" height="40" rx="7"/>
-        <rect class="coat" x="168" y="144" width="15" height="44" rx="7"/>
-        <rect class="coat" x="94" y="150" width="14" height="38" rx="7"/>
-        <rect class="coat" x="112" y="152" width="14" height="36" rx="7"/>
-        <ellipse class="coat" cx="130" cy="128" rx="56" ry="40"/>
-        <path class="wing" d="M124 108 Q104 78 124 62 Q136 52 146 60 Q134 66 132 78 Q144 70 152 78 Q140 84 138 96 Q148 94 154 100 Q142 106 136 116 Z"/>
-        <circle class="coat" cx="72" cy="78" r="32"/>
-        <ellipse class="coat-light" cx="96" cy="90" rx="16" ry="12"/>
-        <path class="coat horn" d="M78 48 Q80 24 96 4 Q104 8 86 48 Z"/>
-        <ellipse class="eye-white" cx="80" cy="75" rx="9" ry="11"/>
-        <ellipse class="iris" cx="84" cy="78" rx="5.5" ry="6"/>
-        <circle class="pupil" cx="85" cy="80" r="2.5"/>
-        <circle class="eye-glint" cx="87" cy="73.5" r="2.2"/>
-        <circle class="eye-glint" cx="82" cy="84" r="1.1"/>
-        <circle class="dot" cx="100" cy="88" r="1.6"/>
-        <path class="smile" d="M94 96 Q99 100 105 93"/>
-        <ellipse class="blush" cx="60" cy="92" rx="5.5" ry="3.2"/>
-        <g class="mark" transform="translate(138 126)">
-          <path d="M0 -9 L1.9 -3.3 L7.8 -4.5 L3.8 0 L7.8 4.5 L1.9 3.3 L0 9 L-1.9 3.3 L-7.8 4.5 L-3.8 0 L-7.8 -4.5 L-1.9 -3.3 Z"/>
-        </g>
-        <path class="mark2" d="M152 112 L153 115.4 L156.4 116.4 L153 117.4 L152 120.8 L151 117.4 L147.6 116.4 L151 115.4 Z"/>
-        <path class="mark2" d="M125 141 L125.8 143.2 L128 144 L125.8 144.8 L125 147 L124.2 144.8 L122 144 L124.2 143.2 Z"/>
-        <path class="mane" fill="url(#twMane)" d="M42 70 Q40 34 76 30 Q104 34 108 52 Q94 64 80 54 Q64 70 42 70 Z"/>
-        <path class="mane2" fill="url(#twTail)" d="M52 66 Q34 94 50 116 Q64 106 58 84 Q62 72 52 66 Z"/>
-        <path class="coat" d="M58 52 Q50 30 66 28 Q80 30 82 52 Q70 44 58 52 Z"/>
-        <path class="ear-inner" d="M62 47 Q58 36 66 34 Q73 36 75 47 Q68 42 62 47 Z"/>
-      </svg>
-      <span class="pony-name">紫悦</span>
-    </div>
-
     <div class="panel">
+      <div class="pony-duo">
+      <!-- 左右两侧的卡通小马伙伴（原创简笔 SVG 插画） -->
+      <div class="pony pony-left pony-fluttershy" aria-hidden="true">
+        <svg class="pony-svg" viewBox="0 0 210 192">
+          <defs>
+            <linearGradient id="fsMane" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffd8e7"/>
+              <stop offset="0.5" stop-color="#f9a8c9"/>
+              <stop offset="1" stop-color="#ef7fb2"/>
+            </linearGradient>
+            <linearGradient id="fsTail" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f9a8c9"/>
+              <stop offset="1" stop-color="#ffd8e7"/>
+            </linearGradient>
+          </defs>
+          <path class="mane2" fill="url(#fsTail)" d="M178 98 Q204 118 190 140 Q202 154 184 164 Q166 174 158 156 Q168 148 166 134 Q176 122 170 106 Z"/>
+          <rect class="coat" x="150" y="148" width="15" height="40" rx="7"/>
+          <rect class="coat" x="168" y="144" width="15" height="44" rx="7"/>
+          <rect class="coat" x="94" y="150" width="14" height="38" rx="7"/>
+          <rect class="coat" x="112" y="152" width="14" height="36" rx="7"/>
+          <ellipse class="coat" cx="130" cy="128" rx="56" ry="40"/>
+          <path class="wing" d="M124 108 Q104 78 124 62 Q136 52 146 60 Q134 66 132 78 Q144 70 152 78 Q140 84 138 96 Q148 94 154 100 Q142 106 136 116 Z"/>
+          <circle class="coat" cx="72" cy="78" r="32"/>
+          <ellipse class="coat-light" cx="96" cy="90" rx="16" ry="12"/>
+          <ellipse class="eye-white" cx="80" cy="75" rx="9" ry="11"/>
+          <ellipse class="iris" cx="84" cy="78" rx="5.5" ry="6"/>
+          <circle class="pupil" cx="85" cy="80" r="2.5"/>
+          <circle class="eye-glint" cx="87" cy="73.5" r="2.2"/>
+          <circle class="eye-glint" cx="82" cy="84" r="1.1"/>
+          <circle class="dot" cx="100" cy="88" r="1.6"/>
+          <path class="smile" d="M94 96 Q99 100 105 93"/>
+          <ellipse class="blush" cx="60" cy="92" rx="5.5" ry="3.2"/>
+          <g class="mark">
+            <g transform="translate(130 121) rotate(-15)">
+              <circle cx="-2.6" cy="-1.4" r="2.5"/>
+              <circle cx="2.6" cy="-1.4" r="2.5"/>
+              <circle cx="0" cy="1.2" r="2.9"/>
+              <circle class="mark2" cx="0" cy="0" r="0.9"/>
+            </g>
+            <g transform="translate(145 115) rotate(10)">
+              <circle cx="-2.2" cy="-1.2" r="2.1"/>
+              <circle cx="2.2" cy="-1.2" r="2.1"/>
+              <circle cx="0" cy="1" r="2.4"/>
+              <circle class="mark2" cx="0" cy="0" r="0.8"/>
+            </g>
+            <g transform="translate(138 134) rotate(22)">
+              <circle cx="-2.2" cy="-1.2" r="2.1"/>
+              <circle cx="2.2" cy="-1.2" r="2.1"/>
+              <circle cx="0" cy="1" r="2.4"/>
+              <circle class="mark2" cx="0" cy="0" r="0.8"/>
+            </g>
+          </g>
+          <path class="mane" fill="url(#fsMane)" d="M42 70 Q40 34 76 30 Q104 34 108 52 Q94 64 80 54 Q64 70 42 70 Z"/>
+          <path class="mane2" fill="url(#fsTail)" d="M52 66 Q34 94 50 116 Q64 106 58 84 Q62 72 52 66 Z"/>
+          <path class="coat" d="M58 52 Q50 30 66 28 Q80 30 82 52 Q70 44 58 52 Z"/>
+          <path class="ear-inner" d="M62 47 Q58 36 66 34 Q73 36 75 47 Q68 42 62 47 Z"/>
+        </svg>
+        <span class="pony-name">柔柔</span>
+      </div>
+
+      <div class="pony pony-right pony-twilight" aria-hidden="true">
+        <svg class="pony-svg" viewBox="0 0 210 192">
+          <defs>
+            <linearGradient id="twMane" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#3f3468"/>
+              <stop offset="0.45" stop-color="#6b4fa8"/>
+              <stop offset="0.75" stop-color="#a55fd4"/>
+              <stop offset="1" stop-color="#ef8fb2"/>
+            </linearGradient>
+            <linearGradient id="twTail" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#4a3a80"/>
+              <stop offset="0.6" stop-color="#8b5cc4"/>
+              <stop offset="1" stop-color="#ef8fb2"/>
+            </linearGradient>
+          </defs>
+          <path class="mane2" fill="url(#twTail)" d="M178 98 Q204 118 190 140 Q202 154 184 164 Q166 174 158 156 Q168 148 166 134 Q176 122 170 106 Z"/>
+          <rect class="coat" x="150" y="148" width="15" height="40" rx="7"/>
+          <rect class="coat" x="168" y="144" width="15" height="44" rx="7"/>
+          <rect class="coat" x="94" y="150" width="14" height="38" rx="7"/>
+          <rect class="coat" x="112" y="152" width="14" height="36" rx="7"/>
+          <ellipse class="coat" cx="130" cy="128" rx="56" ry="40"/>
+          <path class="wing" d="M124 108 Q104 78 124 62 Q136 52 146 60 Q134 66 132 78 Q144 70 152 78 Q140 84 138 96 Q148 94 154 100 Q142 106 136 116 Z"/>
+          <circle class="coat" cx="72" cy="78" r="32"/>
+          <ellipse class="coat-light" cx="96" cy="90" rx="16" ry="12"/>
+          <path class="coat horn" d="M78 48 Q80 24 96 4 Q104 8 86 48 Z"/>
+          <ellipse class="eye-white" cx="80" cy="75" rx="9" ry="11"/>
+          <ellipse class="iris" cx="84" cy="78" rx="5.5" ry="6"/>
+          <circle class="pupil" cx="85" cy="80" r="2.5"/>
+          <circle class="eye-glint" cx="87" cy="73.5" r="2.2"/>
+          <circle class="eye-glint" cx="82" cy="84" r="1.1"/>
+          <circle class="dot" cx="100" cy="88" r="1.6"/>
+          <path class="smile" d="M94 96 Q99 100 105 93"/>
+          <ellipse class="blush" cx="60" cy="92" rx="5.5" ry="3.2"/>
+          <g class="mark" transform="translate(138 126)">
+            <path d="M0 -9 L1.9 -3.3 L7.8 -4.5 L3.8 0 L7.8 4.5 L1.9 3.3 L0 9 L-1.9 3.3 L-7.8 4.5 L-3.8 0 L-7.8 -4.5 L-1.9 -3.3 Z"/>
+          </g>
+          <path class="mark2" d="M152 112 L153 115.4 L156.4 116.4 L153 117.4 L152 120.8 L151 117.4 L147.6 116.4 L151 115.4 Z"/>
+          <path class="mark2" d="M125 141 L125.8 143.2 L128 144 L125.8 144.8 L125 147 L124.2 144.8 L122 144 L124.2 143.2 Z"/>
+          <path class="mane" fill="url(#twMane)" d="M42 70 Q40 34 76 30 Q104 34 108 52 Q94 64 80 54 Q64 70 42 70 Z"/>
+          <path class="mane2" fill="url(#twTail)" d="M52 66 Q34 94 50 116 Q64 106 58 84 Q62 72 52 66 Z"/>
+          <path class="coat" d="M58 52 Q50 30 66 28 Q80 30 82 52 Q70 44 58 52 Z"/>
+          <path class="ear-inner" d="M62 47 Q58 36 66 34 Q73 36 75 47 Q68 42 62 47 Z"/>
+        </svg>
+        <span class="pony-name">紫悦</span>
+      </div>
+      </div>
+
+
       <h1 class="title">🚀 字母大冒险</h1>
       <p class="subtitle">选一个模式，开始打字吧！</p>
       <div class="speed-row">

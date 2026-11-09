@@ -119,10 +119,12 @@ body {
 .hidden { display: none !important; }
 
 /* ---------- 首页两侧小马伙伴（原创简笔插画） ---------- */
+.pony-duo { display: contents; }
 .pony {
+  --pony-w: clamp(160px, 15vw, 210px);
   position: absolute;
-  bottom: clamp(18px, 10vh, 96px);
-  width: clamp(160px, 15vw, 210px);
+  bottom: calc(clamp(18px, 10vh, 96px) - (100vh - 100%) / 2);
+  width: var(--pony-w);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -132,8 +134,8 @@ body {
   animation: ponyBob 4.8s ease-in-out infinite;
   filter: drop-shadow(0 16px 18px rgba(50, 80, 140, 0.18));
 }
-.pony-left { left: max(10px, calc(50% - 545px)); }
-.pony-right { right: max(10px, calc(50% - 545px)); animation-delay: -2.4s; }
+.pony-left { left: calc(-1 * var(--pony-w) - 12px); }
+.pony-right { right: calc(-1 * var(--pony-w) - 12px); animation-delay: -2.4s; }
 
 .pony-svg { width: 100%; height: auto; overflow: visible; }
 .pony-left .pony-svg { transform: rotate(-4deg); }
@@ -218,8 +220,29 @@ body {
   50% { transform: translateY(-10px); }
 }
 
-/* 屏幕太窄或太矮时隐藏，避免遮挡主面板 */
-@media (max-width: 999px), (max-height: 640px) {
+/* 窄屏时把两只小马缩小并排放在面板顶部，保证也能看到它们 */
+@media (max-width: 999px) and (min-height: 740px) {
+  .pony-duo {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: clamp(16px, 8vw, 56px);
+    margin: 0 0 6px;
+  }
+  .pony {
+    position: static;
+    width: clamp(56px, 18vw, 96px);
+    filter: drop-shadow(0 8px 10px rgba(50, 80, 140, 0.16));
+  }
+  .pony-name {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 1px 8px;
+  }
+}
+
+/* 屏幕太矮时隐藏，避免遮挡主面板 */
+@media (max-width: 999px) and (max-height: 739px), (min-width: 1000px) and (max-height: 640px) {
   .pony { display: none; }
 }
 
