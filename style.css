@@ -118,8 +118,115 @@ body {
 
 .hidden { display: none !important; }
 
+/* ---------- 首页两侧小马伙伴（原创简笔插画） ---------- */
+.pony {
+  position: absolute;
+  bottom: clamp(18px, 10vh, 96px);
+  width: clamp(160px, 15vw, 210px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 0;
+  animation: ponyBob 4.8s ease-in-out infinite;
+  filter: drop-shadow(0 16px 18px rgba(50, 80, 140, 0.18));
+}
+.pony-left { left: max(10px, calc(50% - 545px)); }
+.pony-right { right: max(10px, calc(50% - 545px)); animation-delay: -2.4s; }
+
+.pony-svg { width: 100%; height: auto; overflow: visible; }
+.pony-left .pony-svg { transform: rotate(-4deg); }
+.pony-right .pony-svg { transform: rotate(4deg); }
+
+.pony-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--pony-name, #8a6d1a);
+  background: rgba(255, 255, 255, 0.78);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 2px 14px 2px 17px;
+  box-shadow: 0 3px 10px rgba(40, 80, 140, 0.14);
+}
+
+/* 共享 SVG 上色，具体配色由角色类上的变量决定 */
+.pony-svg .coat,
+.pony-svg .horn {
+  stroke: var(--pony-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pony-svg .coat { fill: var(--pony-coat); }
+.pony-svg .coat-light { fill: var(--pony-light); }
+.pony-svg .horn { fill: #fff6cf; stroke: #e0b64f; }
+.pony-svg .mane,
+.pony-svg .mane2 {
+  stroke: var(--pony-mane-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+/* 鬃毛和尾巴的渐变通过 SVG 的 fill 属性引用，避免外部 CSS 的 url(#id) 解析问题 */
+.pony-svg .wing {
+  fill: var(--pony-wing);
+  stroke: var(--pony-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pony-svg .ear-inner { fill: var(--pony-ear); }
+.pony-svg .eye-white { fill: #fff; stroke: var(--pony-line); stroke-width: 1.2; }
+.pony-svg .iris { fill: var(--pony-iris); }
+.pony-svg .pupil { fill: #2f2740; }
+.pony-svg .eye-glint { fill: #fff; }
+.pony-svg .dot { fill: var(--pony-line); }
+.pony-svg .smile { fill: none; stroke: var(--pony-line); stroke-width: 2; stroke-linecap: round; }
+.pony-svg .blush { fill: var(--pony-blush); opacity: 0.55; }
+.pony-svg .mark { fill: var(--pony-mark); }
+.pony-svg .mark2 { fill: var(--pony-mark2); }
+
+.pony-fluttershy {
+  --pony-coat: #ffe9a8;
+  --pony-light: #fff8d9;
+  --pony-line: #d9b64f;
+  --pony-mane-line: #e58ab4;
+  --pony-wing: #fff2f7;
+  --pony-iris: #3fa9c9;
+  --pony-ear: #fff3c9;
+  --pony-blush: #ff9fbe;
+  --pony-mark: #f59ac4;
+  --pony-mark2: #ffffff;
+  --pony-name: #d46596;
+}
+
+.pony-twilight {
+  --pony-coat: #d8c8f4;
+  --pony-light: #efe7ff;
+  --pony-line: #a68bd0;
+  --pony-mane-line: #6b4fa8;
+  --pony-wing: #efe6ff;
+  --pony-iris: #6a4fb3;
+  --pony-ear: #e7dcff;
+  --pony-blush: #f4a9c9;
+  --pony-mark: #f59ac8;
+  --pony-mark2: #ffffff;
+  --pony-name: #7c5cbb;
+}
+
+@keyframes ponyBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* 屏幕太窄或太矮时隐藏，避免遮挡主面板 */
+@media (max-width: 999px), (max-height: 640px) {
+  .pony { display: none; }
+}
+
 /* ---------- 卡片 ---------- */
 .panel {
+  position: relative;
+  z-index: 1;
   background: rgba(255, 255, 255, 0.93);
   border-radius: 28px;
   box-shadow: 0 18px 50px rgba(30, 90, 160, 0.25);
@@ -177,6 +284,12 @@ body {
   box-shadow: 0 2px 6px rgba(30, 90, 160, 0.18);
 }
 .hint { color: #7c8aa0; font-size: 14px; margin: 4px 0 0; }
+.credit {
+  color: #9aa8bc;
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin: 14px 0 0;
+}
 
 /* ---------- 模式按钮 ---------- */
 .mode-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
