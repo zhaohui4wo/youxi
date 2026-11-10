@@ -8,9 +8,10 @@
 /* ---------------- 词库 ---------------- */
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-/* 字母名称的读音写法，避免语音引擎把单个字母读成单词 */
+/* 字母名称的读音写法，避免语音引擎把单个字母读成单词。
+   注意 a 用大写 'A'：写成 'ay' 会被引擎当成单词 aye，读成 /aɪ/（和字母 I 同音） */
 const LETTER_NAMES = {
-  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff',
+  a: 'A', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'eff',
   g: 'gee', h: 'aitch', i: 'eye', j: 'jay', k: 'kay', l: 'ell',
   m: 'em', n: 'en', o: 'oh', p: 'pee', q: 'cue', r: 'ar',
   s: 'ess', t: 'tee', u: 'you', v: 'vee', w: 'double you',
